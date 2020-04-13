@@ -1,0 +1,13 @@
+{
+    "columns" : ["ticker","instrument","name","sector","currency","created_date"],
+    "sector"  : ["Industrials","Health Care","Information Technology",
+                 "Communication Services","Consumer Discretionary","Utilities",
+                 "Financials","Materials","Real Estate","Consumer Staples",
+                 "Energy"],
+    "ohlv":  ["formatted_date","open", "high", "low", "close","adjclose","volume"],
+    "backtest_data_path" : "/home/jun/proj/bt/data/backtest/",
+    "data_path" : "/home/jun/proj/bt/data/",
+    "rawdata_path" : "/home/jun/proj/bt/data/raw/",
+    "sp500_url": "https://en.wikipedia.org/wiki/List_of_S%26P_500_companies",
+    "sp500_name" : "sp500.csv"
+}

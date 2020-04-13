@@ -1,0 +1,508 @@
+ticker,instrument,name,sector,currency,created_date
+MMM,stock,3M Company,Industrials,USD,2019-12-28 15:24:04.167755
+ABT,stock,Abbott Laboratories,Health Care,USD,2019-12-28 15:24:04.167755
+ABBV,stock,AbbVie Inc.,Health Care,USD,2019-12-28 15:24:04.167755
+ABMD,stock,ABIOMED Inc,Health Care,USD,2019-12-28 15:24:04.167755
+ACN,stock,Accenture plc,Information Technology,USD,2019-12-28 15:24:04.167755
+ATVI,stock,Activision Blizzard,Communication Services,USD,2019-12-28 15:24:04.167755
+ADBE,stock,Adobe Systems Inc,Information Technology,USD,2019-12-28 15:24:04.167755
+AMD,stock,Advanced Micro Devices Inc,Information Technology,USD,2019-12-28 15:24:04.167755
+AAP,stock,Advance Auto Parts,Consumer Discretionary,USD,2019-12-28 15:24:04.167755
+AES,stock,AES Corp,Utilities,USD,2019-12-28 15:24:04.167755
+AMG,stock,Affiliated Managers Group Inc,Financials,USD,2019-12-28 15:24:04.167755
+AFL,stock,AFLAC Inc,Financials,USD,2019-12-28 15:24:04.167755
+A,stock,Agilent Technologies Inc,Health Care,USD,2019-12-28 15:24:04.167755
+APD,stock,Air Products & Chemicals Inc,Materials,USD,2019-12-28 15:24:04.167755
+AKAM,stock,Akamai Technologies Inc,Information Technology,USD,2019-12-28 15:24:04.167755
+ALK,stock,Alaska Air Group Inc,Industrials,USD,2019-12-28 15:24:04.167755
+ALB,stock,Albemarle Corp,Materials,USD,2019-12-28 15:24:04.167755
+ARE,stock,Alexandria Real Estate Equities,Real Estate,USD,2019-12-28 15:24:04.167755
+ALXN,stock,Alexion Pharmaceuticals,Health Care,USD,2019-12-28 15:24:04.167755
+ALGN,stock,Align Technology,Health Care,USD,2019-12-28 15:24:04.167755
+ALLE,stock,Allegion,Industrials,USD,2019-12-28 15:24:04.167755
+AGN,stock,"Allergan, Plc",Health Care,USD,2019-12-28 15:24:04.167755
+ADS,stock,Alliance Data Systems,Information Technology,USD,2019-12-28 15:24:04.167755
+LNT,stock,Alliant Energy Corp,Utilities,USD,2019-12-28 15:24:04.167755
+ALL,stock,Allstate Corp,Financials,USD,2019-12-28 15:24:04.167755
+GOOGL,stock,Alphabet Inc Class A,Communication Services,USD,2019-12-28 15:24:04.167755
+GOOG,stock,Alphabet Inc Class C,Communication Services,USD,2019-12-28 15:24:04.167755
+MO,stock,Altria Group Inc,Consumer Staples,USD,2019-12-28 15:24:04.167755
+AMZN,stock,Amazon.com Inc.,Consumer Discretionary,USD,2019-12-28 15:24:04.167755
+AMCR,stock,Amcor plc,Materials,USD,2019-12-28 15:24:04.167755
+AEE,stock,Ameren Corp,Utilities,USD,2019-12-28 15:24:04.167755
+AAL,stock,American Airlines Group,Industrials,USD,2019-12-28 15:24:04.167755
+AEP,stock,American Electric Power,Utilities,USD,2019-12-28 15:24:04.167755
+AXP,stock,American Express Co,Financials,USD,2019-12-28 15:24:04.167755
+AIG,stock,American International Group,Financials,USD,2019-12-28 15:24:04.167755
+AMT,stock,American Tower Corp.,Real Estate,USD,2019-12-28 15:24:04.167755
+AWK,stock,American Water Works Company Inc,Utilities,USD,2019-12-28 15:24:04.167755
+AMP,stock,Ameriprise Financial,Financials,USD,2019-12-28 15:24:04.167755
+ABC,stock,AmerisourceBergen Corp,Health Care,USD,2019-12-28 15:24:04.167755
+AME,stock,AMETEK Inc.,Industrials,USD,2019-12-28 15:24:04.167755
+AMGN,stock,Amgen Inc.,Health Care,USD,2019-12-28 15:24:04.167755
+APH,stock,Amphenol Corp,Information Technology,USD,2019-12-28 15:24:04.167755
+ADI,stock,"Analog Devices, Inc.",Information Technology,USD,2019-12-28 15:24:04.167755
+ANSS,stock,ANSYS,Information Technology,USD,2019-12-28 15:24:04.167755
+ANTM,stock,Anthem,Health Care,USD,2019-12-28 15:24:04.167755
+AON,stock,Aon plc,Financials,USD,2019-12-28 15:24:04.167755
+AOS,stock,A.O. Smith Corp,Industrials,USD,2019-12-28 15:24:04.167755
+APA,stock,Apache Corporation,Energy,USD,2019-12-28 15:24:04.167755
+AIV,stock,Apartment Investment & Management,Real Estate,USD,2019-12-28 15:24:04.167755
+AAPL,stock,Apple Inc.,Information Technology,USD,2019-12-28 15:24:04.167755
+AMAT,stock,Applied Materials Inc.,Information Technology,USD,2019-12-28 15:24:04.167755
+APTV,stock,Aptiv Plc,Consumer Discretionary,USD,2019-12-28 15:24:04.167755
+ADM,stock,Archer-Daniels-Midland Co,Consumer Staples,USD,2019-12-28 15:24:04.167755
+ARNC,stock,Arconic Inc.,Industrials,USD,2019-12-28 15:24:04.167755
+ANET,stock,Arista Networks,Information Technology,USD,2019-12-28 15:24:04.167755
+AJG,stock,Arthur J. Gallagher & Co.,Financials,USD,2019-12-28 15:24:04.167755
+AIZ,stock,Assurant,Financials,USD,2019-12-28 15:24:04.167755
+ATO,stock,Atmos Energy Corp,Utilities,USD,2019-12-28 15:24:04.167755
+T,stock,AT&T Inc.,Communication Services,USD,2019-12-28 15:24:04.167755
+ADSK,stock,Autodesk Inc.,Information Technology,USD,2019-12-28 15:24:04.167755
+ADP,stock,Automatic Data Processing,Information Technology,USD,2019-12-28 15:24:04.167755
+AZO,stock,AutoZone Inc,Consumer Discretionary,USD,2019-12-28 15:24:04.167755
+AVB,stock,"AvalonBay Communities, Inc.",Real Estate,USD,2019-12-28 15:24:04.167755
+AVY,stock,Avery Dennison Corp,Materials,USD,2019-12-28 15:24:04.167755
+BKR,stock,Baker Hughes Co,Energy,USD,2019-12-28 15:24:04.167755
+BLL,stock,Ball Corp,Materials,USD,2019-12-28 15:24:04.167755
+BAC,stock,Bank of America Corp,Financials,USD,2019-12-28 15:24:04.167755
+BK,stock,The Bank of New York Mellon Corp.,Financials,USD,2019-12-28 15:24:04.167755
+BAX,stock,Baxter International Inc.,Health Care,USD,2019-12-28 15:24:04.167755
+BDX,stock,Becton Dickinson,Health Care,USD,2019-12-28 15:24:04.167755
+BRK-B,stock,Berkshire Hathaway,Financials,USD,2019-12-28 15:24:04.167755
+BBY,stock,Best Buy Co. Inc.,Consumer Discretionary,USD,2019-12-28 15:24:04.167755
+BIIB,stock,Biogen Inc.,Health Care,USD,2019-12-28 15:24:04.167755
+BLK,stock,BlackRock,Financials,USD,2019-12-28 15:24:04.167755
+BA,stock,Boeing Company,Industrials,USD,2019-12-28 15:24:04.167755
+BKNG,stock,Booking Holdings Inc,Consumer Discretionary,USD,2019-12-28 15:24:04.167755
+BWA,stock,BorgWarner,Consumer Discretionary,USD,2019-12-28 15:24:04.167755
+BXP,stock,Boston Properties,Real Estate,USD,2019-12-28 15:24:04.167755
+BSX,stock,Boston Scientific,Health Care,USD,2019-12-28 15:24:04.167755
+BMY,stock,Bristol-Myers Squibb,Health Care,USD,2019-12-28 15:24:04.167755
+AVGO,stock,Broadcom Inc.,Information Technology,USD,2019-12-28 15:24:04.167755
+BR,stock,Broadridge Financial Solutions,Information Technology,USD,2019-12-28 15:24:04.167755
+BF-B,stock,Brown-Forman Corp.,Consumer Staples,USD,2019-12-28 15:24:04.167755
+CHRW,stock,C. H. Robinson Worldwide,Industrials,USD,2019-12-28 15:24:04.167755
+COG,stock,Cabot Oil & Gas,Energy,USD,2019-12-28 15:24:04.167755
+CDNS,stock,Cadence Design Systems,Information Technology,USD,2019-12-28 15:24:04.167755
+CPB,stock,Campbell Soup,Consumer Staples,USD,2019-12-28 15:24:04.167755
+COF,stock,Capital One Financial,Financials,USD,2019-12-28 15:24:04.167755
+CPRI,stock,Capri Holdings,Consumer Discretionary,USD,2019-12-28 15:24:04.167755
+CAH,stock,Cardinal Health Inc.,Health Care,USD,2019-12-28 15:24:04.167755
+KMX,stock,Carmax Inc,Consumer Discretionary,USD,2019-12-28 15:24:04.167755
+CCL,stock,Carnival Corp.,Consumer Discretionary,USD,2019-12-28 15:24:04.167755
+CAT,stock,Caterpillar Inc.,Industrials,USD,2019-12-28 15:24:04.167755
+CBOE,stock,Cboe Global Markets,Financials,USD,2019-12-28 15:24:04.167755
+CBRE,stock,CBRE Group,Real Estate,USD,2019-12-28 15:24:04.167755
+CDW,stock,CDW,Information Technology,USD,2019-12-28 15:24:04.167755
+CE,stock,Celanese,Materials,USD,2019-12-28 15:24:04.167755
+CNC,stock,Centene Corporation,Health Care,USD,2019-12-28 15:24:04.167755
+CNP,stock,CenterPoint Energy,Utilities,USD,2019-12-28 15:24:04.167755
+CTL,stock,CenturyLink Inc,Communication Services,USD,2019-12-28 15:24:04.167755
+CERN,stock,Cerner,Health Care,USD,2019-12-28 15:24:04.167755
+CF,stock,CF Industries Holdings Inc,Materials,USD,2019-12-28 15:24:04.167755
+SCHW,stock,Charles Schwab Corporation,Financials,USD,2019-12-28 15:24:04.167755
+CHTR,stock,Charter Communications,Communication Services,USD,2019-12-28 15:24:04.167755
+CVX,stock,Chevron Corp.,Energy,USD,2019-12-28 15:24:04.167755
+CMG,stock,Chipotle Mexican Grill,Consumer Discretionary,USD,2019-12-28 15:24:04.167755
+CB,stock,Chubb Limited,Financials,USD,2019-12-28 15:24:04.167755
+CHD,stock,Church & Dwight,Consumer Staples,USD,2019-12-28 15:24:04.167755
+CI,stock,CIGNA Corp.,Health Care,USD,2019-12-28 15:24:04.167755
+XEC,stock,Cimarex Energy,Energy,USD,2019-12-28 15:24:04.167755
+CINF,stock,Cincinnati Financial,Financials,USD,2019-12-28 15:24:04.167755
+CTAS,stock,Cintas Corporation,Industrials,USD,2019-12-28 15:24:04.167755
+CSCO,stock,Cisco Systems,Information Technology,USD,2019-12-28 15:24:04.167755
+C,stock,Citigroup Inc.,Financials,USD,2019-12-28 15:24:04.167755
+CFG,stock,Citizens Financial Group,Financials,USD,2019-12-28 15:24:04.167755
+CTXS,stock,Citrix Systems,Information Technology,USD,2019-12-28 15:24:04.167755
+CLX,stock,The Clorox Company,Consumer Staples,USD,2019-12-28 15:24:04.167755
+CME,stock,CME Group Inc.,Financials,USD,2019-12-28 15:24:04.167755
+CMS,stock,CMS Energy,Utilities,USD,2019-12-28 15:24:04.167755
+KO,stock,Coca-Cola Company,Consumer Staples,USD,2019-12-28 15:24:04.167755
+CTSH,stock,Cognizant Technology Solutions,Information Technology,USD,2019-12-28 15:24:04.167755
+CL,stock,Colgate-Palmolive,Consumer Staples,USD,2019-12-28 15:24:04.167755
+CMCSA,stock,Comcast Corp.,Communication Services,USD,2019-12-28 15:24:04.167755
+CMA,stock,Comerica Inc.,Financials,USD,2019-12-28 15:24:04.167755
+CAG,stock,Conagra Brands,Consumer Staples,USD,2019-12-28 15:24:04.167755
+CXO,stock,Concho Resources,Energy,USD,2019-12-28 15:24:04.167755
+COP,stock,ConocoPhillips,Energy,USD,2019-12-28 15:24:04.167755
+ED,stock,Consolidated Edison,Utilities,USD,2019-12-28 15:24:04.167755
+STZ,stock,Constellation Brands,Consumer Staples,USD,2019-12-28 15:24:04.167755
+COO,stock,The Cooper Companies,Health Care,USD,2019-12-28 15:24:04.167755
+CPRT,stock,Copart Inc,Industrials,USD,2019-12-28 15:24:04.167755
+GLW,stock,Corning Inc.,Information Technology,USD,2019-12-28 15:24:04.167755
+CTVA,stock,Corteva,Materials,USD,2019-12-28 15:24:04.167755
+COST,stock,Costco Wholesale Corp.,Consumer Staples,USD,2019-12-28 15:24:04.167755
+COTY,stock,"Coty, Inc",Consumer Staples,USD,2019-12-28 15:24:04.167755
+CCI,stock,Crown Castle International Corp.,Real Estate,USD,2019-12-28 15:24:04.167755
+CSX,stock,CSX Corp.,Industrials,USD,2019-12-28 15:24:04.167755
+CMI,stock,Cummins Inc.,Industrials,USD,2019-12-28 15:24:04.167755
+CVS,stock,CVS Health,Health Care,USD,2019-12-28 15:24:04.167755
+DHI,stock,D. R. Horton,Consumer Discretionary,USD,2019-12-28 15:24:04.167755
+DHR,stock,Danaher Corp.,Health Care,USD,2019-12-28 15:24:04.167755
+DRI,stock,Darden Restaurants,Consumer Discretionary,USD,2019-12-28 15:24:04.167755
+DVA,stock,DaVita Inc.,Health Care,USD,2019-12-28 15:24:04.167755
+DE,stock,Deere & Co.,Industrials,USD,2019-12-28 15:24:04.167755
+DAL,stock,Delta Air Lines Inc.,Industrials,USD,2019-12-28 15:24:04.167755
+XRAY,stock,Dentsply Sirona,Health Care,USD,2019-12-28 15:24:04.167755
+DVN,stock,Devon Energy,Energy,USD,2019-12-28 15:24:04.167755
+FANG,stock,Diamondback Energy,Energy,USD,2019-12-28 15:24:04.167755
+DLR,stock,Digital Realty Trust Inc,Real Estate,USD,2019-12-28 15:24:04.167755
+DFS,stock,Discover Financial Services,Financials,USD,2019-12-28 15:24:04.167755
+DISCA,stock,Discovery Inc. Class A,Communication Services,USD,2019-12-28 15:24:04.167755
+DISCK,stock,Discovery Inc. Class C,Communication Services,USD,2019-12-28 15:24:04.167755
+DISH,stock,Dish Network,Communication Services,USD,2019-12-28 15:24:04.167755
+DG,stock,Dollar General,Consumer Discretionary,USD,2019-12-28 15:24:04.167755
+DLTR,stock,Dollar Tree,Consumer Discretionary,USD,2019-12-28 15:24:04.167755
+D,stock,Dominion Energy,Utilities,USD,2019-12-28 15:24:04.167755
+DOV,stock,Dover Corp.,Industrials,USD,2019-12-28 15:24:04.167755
+DOW,stock,Dow Inc.,Materials,USD,2019-12-28 15:24:04.167755
+DTE,stock,DTE Energy Co.,Utilities,USD,2019-12-28 15:24:04.167755
+DUK,stock,Duke Energy,Utilities,USD,2019-12-28 15:24:04.167755
+DRE,stock,Duke Realty Corp,Real Estate,USD,2019-12-28 15:24:04.167755
+DD,stock,DuPont de Nemours Inc,Materials,USD,2019-12-28 15:24:04.167755
+DXC,stock,DXC Technology,Information Technology,USD,2019-12-28 15:24:04.167755
+ETFC,stock,E*Trade,Financials,USD,2019-12-28 15:24:04.167755
+EMN,stock,Eastman Chemical,Materials,USD,2019-12-28 15:24:04.167755
+ETN,stock,Eaton Corporation,Industrials,USD,2019-12-28 15:24:04.167755
+EBAY,stock,eBay Inc.,Consumer Discretionary,USD,2019-12-28 15:24:04.167755
+ECL,stock,Ecolab Inc.,Materials,USD,2019-12-28 15:24:04.167755
+EIX,stock,Edison Int'l,Utilities,USD,2019-12-28 15:24:04.167755
+EW,stock,Edwards Lifesciences,Health Care,USD,2019-12-28 15:24:04.167755
+EA,stock,Electronic Arts,Communication Services,USD,2019-12-28 15:24:04.167755
+EMR,stock,Emerson Electric Company,Industrials,USD,2019-12-28 15:24:04.167755
+ETR,stock,Entergy Corp.,Utilities,USD,2019-12-28 15:24:04.167755
+EOG,stock,EOG Resources,Energy,USD,2019-12-28 15:24:04.167755
+EFX,stock,Equifax Inc.,Industrials,USD,2019-12-28 15:24:04.167755
+EQIX,stock,Equinix,Real Estate,USD,2019-12-28 15:24:04.167755
+EQR,stock,Equity Residential,Real Estate,USD,2019-12-28 15:24:04.167755
+ESS,stock,"Essex Property Trust, Inc.",Real Estate,USD,2019-12-28 15:24:04.167755
+EL,stock,Estee Lauder Cos.,Consumer Staples,USD,2019-12-28 15:24:04.167755
+EVRG,stock,Evergy,Utilities,USD,2019-12-28 15:24:04.167755
+ES,stock,Eversource Energy,Utilities,USD,2019-12-28 15:24:04.167755
+RE,stock,Everest Re Group Ltd.,Financials,USD,2019-12-28 15:24:04.167755
+EXC,stock,Exelon Corp.,Utilities,USD,2019-12-28 15:24:04.167755
+EXPE,stock,Expedia Group,Consumer Discretionary,USD,2019-12-28 15:24:04.167755
+EXPD,stock,Expeditors,Industrials,USD,2019-12-28 15:24:04.167755
+EXR,stock,Extra Space Storage,Real Estate,USD,2019-12-28 15:24:04.167755
+XOM,stock,Exxon Mobil Corp.,Energy,USD,2019-12-28 15:24:04.167755
+FFIV,stock,F5 Networks,Information Technology,USD,2019-12-28 15:24:04.167755
+FB,stock,"Facebook, Inc.",Communication Services,USD,2019-12-28 15:24:04.167755
+FAST,stock,Fastenal Co,Industrials,USD,2019-12-28 15:24:04.167755
+FRT,stock,Federal Realty Investment Trust,Real Estate,USD,2019-12-28 15:24:04.167755
+FDX,stock,FedEx Corporation,Industrials,USD,2019-12-28 15:24:04.167755
+FIS,stock,Fidelity National Information Services,Information Technology,USD,2019-12-28 15:24:04.167755
+FITB,stock,Fifth Third Bancorp,Financials,USD,2019-12-28 15:24:04.167755
+FE,stock,FirstEnergy Corp,Utilities,USD,2019-12-28 15:24:04.167755
+FRC,stock,First Republic Bank,Financials,USD,2019-12-28 15:24:04.167755
+FISV,stock,Fiserv Inc,Information Technology,USD,2019-12-28 15:24:04.167755
+FLT,stock,FleetCor Technologies Inc,Information Technology,USD,2019-12-28 15:24:04.167755
+FLIR,stock,FLIR Systems,Information Technology,USD,2019-12-28 15:24:04.167755
+FLS,stock,Flowserve Corporation,Industrials,USD,2019-12-28 15:24:04.167755
+FMC,stock,FMC Corporation,Materials,USD,2019-12-28 15:24:04.167755
+F,stock,Ford Motor,Consumer Discretionary,USD,2019-12-28 15:24:04.167755
+FTNT,stock,Fortinet,Information Technology,USD,2019-12-28 15:24:04.167755
+FTV,stock,Fortive Corp,Industrials,USD,2019-12-28 15:24:04.167755
+FBHS,stock,Fortune Brands Home & Security,Industrials,USD,2019-12-28 15:24:04.167755
+FOXA,stock,Fox Corporation Class A,Communication Services,USD,2019-12-28 15:24:04.167755
+FOX,stock,Fox Corporation Class B,Communication Services,USD,2019-12-28 15:24:04.167755
+BEN,stock,Franklin Resources,Financials,USD,2019-12-28 15:24:04.167755
+FCX,stock,Freeport-McMoRan Inc.,Materials,USD,2019-12-28 15:24:04.167755
+GPS,stock,Gap Inc.,Consumer Discretionary,USD,2019-12-28 15:24:04.167755
+GRMN,stock,Garmin Ltd.,Consumer Discretionary,USD,2019-12-28 15:24:04.167755
+IT,stock,Gartner Inc,Information Technology,USD,2019-12-28 15:24:04.167755
+GD,stock,General Dynamics,Industrials,USD,2019-12-28 15:24:04.167755
+GE,stock,General Electric,Industrials,USD,2019-12-28 15:24:04.167755
+GIS,stock,General Mills,Consumer Staples,USD,2019-12-28 15:24:04.167755
+GM,stock,General Motors,Consumer Discretionary,USD,2019-12-28 15:24:04.167755
+GPC,stock,Genuine Parts,Consumer Discretionary,USD,2019-12-28 15:24:04.167755
+GILD,stock,Gilead Sciences,Health Care,USD,2019-12-28 15:24:04.167755
+GL,stock,Globe Life Inc.,Financials,USD,2019-12-28 15:24:04.167755
+GPN,stock,Global Payments Inc.,Information Technology,USD,2019-12-28 15:24:04.167755
+GS,stock,Goldman Sachs Group,Financials,USD,2019-12-28 15:24:04.167755
+GWW,stock,Grainger (W.W.) Inc.,Industrials,USD,2019-12-28 15:24:04.167755
+HRB,stock,H&R Block,Consumer Discretionary,USD,2019-12-28 15:24:04.167755
+HAL,stock,Halliburton Co.,Energy,USD,2019-12-28 15:24:04.167755
+HBI,stock,Hanesbrands Inc,Consumer Discretionary,USD,2019-12-28 15:24:04.167755
+HOG,stock,Harley-Davidson,Consumer Discretionary,USD,2019-12-28 15:24:04.167755
+HIG,stock,Hartford Financial Svc.Gp.,Financials,USD,2019-12-28 15:24:04.167755
+HAS,stock,Hasbro Inc.,Consumer Discretionary,USD,2019-12-28 15:24:04.167755
+HCA,stock,HCA Healthcare,Health Care,USD,2019-12-28 15:24:04.167755
+PEAK,stock,Healthpeak Properties,Real Estate,USD,2019-12-28 15:24:04.167755
+HP,stock,Helmerich & Payne,Energy,USD,2019-12-28 15:24:04.167755
+HSIC,stock,Henry Schein,Health Care,USD,2019-12-28 15:24:04.167755
+HSY,stock,The Hershey Company,Consumer Staples,USD,2019-12-28 15:24:04.167755
+HES,stock,Hess Corporation,Energy,USD,2019-12-28 15:24:04.167755
+HPE,stock,Hewlett Packard Enterprise,Information Technology,USD,2019-12-28 15:24:04.167755
+HLT,stock,Hilton Worldwide Holdings Inc,Consumer Discretionary,USD,2019-12-28 15:24:04.167755
+HFC,stock,HollyFrontier Corp,Energy,USD,2019-12-28 15:24:04.167755
+HOLX,stock,Hologic,Health Care,USD,2019-12-28 15:24:04.167755
+HD,stock,Home Depot,Consumer Discretionary,USD,2019-12-28 15:24:04.167755
+HON,stock,Honeywell Int'l Inc.,Industrials,USD,2019-12-28 15:24:04.167755
+HRL,stock,Hormel Foods Corp.,Consumer Staples,USD,2019-12-28 15:24:04.167755
+HST,stock,Host Hotels & Resorts,Real Estate,USD,2019-12-28 15:24:04.167755
+HPQ,stock,HP Inc.,Information Technology,USD,2019-12-28 15:24:04.167755
+HUM,stock,Humana Inc.,Health Care,USD,2019-12-28 15:24:04.167755
+HBAN,stock,Huntington Bancshares,Financials,USD,2019-12-28 15:24:04.167755
+HII,stock,Huntington Ingalls Industries,Industrials,USD,2019-12-28 15:24:04.167755
+IEX,stock,IDEX Corporation,Industrials,USD,2019-12-28 15:24:04.167755
+IDXX,stock,IDEXX Laboratories,Health Care,USD,2019-12-28 15:24:04.167755
+INFO,stock,IHS Markit Ltd.,Industrials,USD,2019-12-28 15:24:04.167755
+ITW,stock,Illinois Tool Works,Industrials,USD,2019-12-28 15:24:04.167755
+ILMN,stock,Illumina Inc,Health Care,USD,2019-12-28 15:24:04.167755
+IR,stock,Ingersoll-Rand PLC,Industrials,USD,2019-12-28 15:24:04.167755
+INTC,stock,Intel Corp.,Information Technology,USD,2019-12-28 15:24:04.167755
+ICE,stock,Intercontinental Exchange,Financials,USD,2019-12-28 15:24:04.167755
+IBM,stock,International Business Machines,Information Technology,USD,2019-12-28 15:24:04.167755
+INCY,stock,Incyte,Health Care,USD,2019-12-28 15:24:04.167755
+IP,stock,International Paper,Materials,USD,2019-12-28 15:24:04.167755
+IPG,stock,Interpublic Group,Communication Services,USD,2019-12-28 15:24:04.167755
+IFF,stock,Intl Flavors & Fragrances,Materials,USD,2019-12-28 15:24:04.167755
+INTU,stock,Intuit Inc.,Information Technology,USD,2019-12-28 15:24:04.167755
+ISRG,stock,Intuitive Surgical Inc.,Health Care,USD,2019-12-28 15:24:04.167755
+IVZ,stock,Invesco Ltd.,Financials,USD,2019-12-28 15:24:04.167755
+IPGP,stock,IPG Photonics Corp.,Information Technology,USD,2019-12-28 15:24:04.167755
+IQV,stock,IQVIA Holdings Inc.,Health Care,USD,2019-12-28 15:24:04.167755
+IRM,stock,Iron Mountain Incorporated,Real Estate,USD,2019-12-28 15:24:04.167755
+JKHY,stock,Jack Henry & Associates,Information Technology,USD,2019-12-28 15:24:04.167755
+J,stock,Jacobs Engineering Group,Industrials,USD,2019-12-28 15:24:04.167755
+JBHT,stock,J. B. Hunt Transport Services,Industrials,USD,2019-12-28 15:24:04.167755
+SJM,stock,JM Smucker,Consumer Staples,USD,2019-12-28 15:24:04.167755
+JNJ,stock,Johnson & Johnson,Health Care,USD,2019-12-28 15:24:04.167755
+JCI,stock,Johnson Controls International,Industrials,USD,2019-12-28 15:24:04.167755
+JPM,stock,JPMorgan Chase & Co.,Financials,USD,2019-12-28 15:24:04.167755
+JNPR,stock,Juniper Networks,Information Technology,USD,2019-12-28 15:24:04.167755
+KSU,stock,Kansas City Southern,Industrials,USD,2019-12-28 15:24:04.167755
+K,stock,Kellogg Co.,Consumer Staples,USD,2019-12-28 15:24:04.167755
+KEY,stock,KeyCorp,Financials,USD,2019-12-28 15:24:04.167755
+KEYS,stock,Keysight Technologies,Information Technology,USD,2019-12-28 15:24:04.167755
+KMB,stock,Kimberly-Clark,Consumer Staples,USD,2019-12-28 15:24:04.167755
+KIM,stock,Kimco Realty,Real Estate,USD,2019-12-28 15:24:04.167755
+KMI,stock,Kinder Morgan,Energy,USD,2019-12-28 15:24:04.167755
+KLAC,stock,KLA Corporation,Information Technology,USD,2019-12-28 15:24:04.167755
+KSS,stock,Kohl's Corp.,Consumer Discretionary,USD,2019-12-28 15:24:04.167755
+KHC,stock,Kraft Heinz Co,Consumer Staples,USD,2019-12-28 15:24:04.167755
+KR,stock,Kroger Co.,Consumer Staples,USD,2019-12-28 15:24:04.167755
+LB,stock,L Brands Inc.,Consumer Discretionary,USD,2019-12-28 15:24:04.167755
+LHX,stock,L3Harris Technologies,Industrials,USD,2019-12-28 15:24:04.167755
+LH,stock,Laboratory Corp. of America Holding,Health Care,USD,2019-12-28 15:24:04.167755
+LRCX,stock,Lam Research,Information Technology,USD,2019-12-28 15:24:04.167755
+LW,stock,Lamb Weston Holdings Inc,Consumer Staples,USD,2019-12-28 15:24:04.167755
+LVS,stock,Las Vegas Sands,Consumer Discretionary,USD,2019-12-28 15:24:04.167755
+LEG,stock,Leggett & Platt,Consumer Discretionary,USD,2019-12-28 15:24:04.167755
+LDOS,stock,Leidos Holdings,Information Technology,USD,2019-12-28 15:24:04.167755
+LEN,stock,Lennar Corp.,Consumer Discretionary,USD,2019-12-28 15:24:04.167755
+LLY,stock,Lilly (Eli) & Co.,Health Care,USD,2019-12-28 15:24:04.167755
+LNC,stock,Lincoln National,Financials,USD,2019-12-28 15:24:04.167755
+LIN,stock,Linde plc,Materials,USD,2019-12-28 15:24:04.167755
+LKQ,stock,LKQ Corporation,Consumer Discretionary,USD,2019-12-28 15:24:04.167755
+LMT,stock,Lockheed Martin Corp.,Industrials,USD,2019-12-28 15:24:04.167755
+L,stock,Loews Corp.,Financials,USD,2019-12-28 15:24:04.167755
+LOW,stock,Lowe's Cos.,Consumer Discretionary,USD,2019-12-28 15:24:04.167755
+LYB,stock,LyondellBasell,Materials,USD,2019-12-28 15:24:04.167755
+MTB,stock,M&T Bank Corp.,Financials,USD,2019-12-28 15:24:04.167755
+MAC,stock,Macerich,Real Estate,USD,2019-12-28 15:24:04.167755
+M,stock,Macy's Inc.,Consumer Discretionary,USD,2019-12-28 15:24:04.167755
+MRO,stock,Marathon Oil Corp.,Energy,USD,2019-12-28 15:24:04.167755
+MPC,stock,Marathon Petroleum,Energy,USD,2019-12-28 15:24:04.167755
+MKTX,stock,MarketAxess,Financials,USD,2019-12-28 15:24:04.167755
+MAR,stock,Marriott Int'l.,Consumer Discretionary,USD,2019-12-28 15:24:04.167755
+MMC,stock,Marsh & McLennan,Financials,USD,2019-12-28 15:24:04.167755
+MLM,stock,Martin Marietta Materials,Materials,USD,2019-12-28 15:24:04.167755
+MAS,stock,Masco Corp.,Industrials,USD,2019-12-28 15:24:04.167755
+MA,stock,Mastercard Inc.,Information Technology,USD,2019-12-28 15:24:04.167755
+MKC,stock,McCormick & Co.,Consumer Staples,USD,2019-12-28 15:24:04.167755
+MXIM,stock,Maxim Integrated Products Inc,Information Technology,USD,2019-12-28 15:24:04.167755
+MCD,stock,McDonald's Corp.,Consumer Discretionary,USD,2019-12-28 15:24:04.167755
+MCK,stock,McKesson Corp.,Health Care,USD,2019-12-28 15:24:04.167755
+MDT,stock,Medtronic plc,Health Care,USD,2019-12-28 15:24:04.167755
+MRK,stock,Merck & Co.,Health Care,USD,2019-12-28 15:24:04.167755
+MET,stock,MetLife Inc.,Financials,USD,2019-12-28 15:24:04.167755
+MTD,stock,Mettler Toledo,Health Care,USD,2019-12-28 15:24:04.167755
+MGM,stock,MGM Resorts International,Consumer Discretionary,USD,2019-12-28 15:24:04.167755
+MCHP,stock,Microchip Technology,Information Technology,USD,2019-12-28 15:24:04.167755
+MU,stock,Micron Technology,Information Technology,USD,2019-12-28 15:24:04.167755
+MSFT,stock,Microsoft Corp.,Information Technology,USD,2019-12-28 15:24:04.167755
+MAA,stock,Mid-America Apartments,Real Estate,USD,2019-12-28 15:24:04.167755
+MHK,stock,Mohawk Industries,Consumer Discretionary,USD,2019-12-28 15:24:04.167755
+TAP,stock,Molson Coors Brewing Company,Consumer Staples,USD,2019-12-28 15:24:04.167755
+MDLZ,stock,Mondelez International,Consumer Staples,USD,2019-12-28 15:24:04.167755
+MNST,stock,Monster Beverage,Consumer Staples,USD,2019-12-28 15:24:04.167755
+MCO,stock,Moody's Corp,Financials,USD,2019-12-28 15:24:04.167755
+MS,stock,Morgan Stanley,Financials,USD,2019-12-28 15:24:04.167755
+MOS,stock,The Mosaic Company,Materials,USD,2019-12-28 15:24:04.167755
+MSI,stock,Motorola Solutions Inc.,Information Technology,USD,2019-12-28 15:24:04.167755
+MSCI,stock,MSCI Inc,Financials,USD,2019-12-28 15:24:04.167755
+MYL,stock,Mylan N.V.,Health Care,USD,2019-12-28 15:24:04.167755
+NDAQ,stock,"Nasdaq, Inc.",Financials,USD,2019-12-28 15:24:04.167755
+NOV,stock,National Oilwell Varco Inc.,Energy,USD,2019-12-28 15:24:04.167755
+NTAP,stock,NetApp,Information Technology,USD,2019-12-28 15:24:04.167755
+NFLX,stock,Netflix Inc.,Communication Services,USD,2019-12-28 15:24:04.167755
+NWL,stock,Newell Brands,Consumer Discretionary,USD,2019-12-28 15:24:04.167755
+NEM,stock,Newmont Goldcorp,Materials,USD,2019-12-28 15:24:04.167755
+NWSA,stock,News Corp. Class A,Communication Services,USD,2019-12-28 15:24:04.167755
+NWS,stock,News Corp. Class B,Communication Services,USD,2019-12-28 15:24:04.167755
+NEE,stock,NextEra Energy,Utilities,USD,2019-12-28 15:24:04.167755
+NLSN,stock,Nielsen Holdings,Industrials,USD,2019-12-28 15:24:04.167755
+NKE,stock,Nike,Consumer Discretionary,USD,2019-12-28 15:24:04.167755
+NI,stock,NiSource Inc.,Utilities,USD,2019-12-28 15:24:04.167755
+NBL,stock,Noble Energy Inc,Energy,USD,2019-12-28 15:24:04.167755
+JWN,stock,Nordstrom,Consumer Discretionary,USD,2019-12-28 15:24:04.167755
+NSC,stock,Norfolk Southern Corp.,Industrials,USD,2019-12-28 15:24:04.167755
+NTRS,stock,Northern Trust Corp.,Financials,USD,2019-12-28 15:24:04.167755
+NOC,stock,Northrop Grumman,Industrials,USD,2019-12-28 15:24:04.167755
+NLOK,stock,NortonLifeLock,Information Technology,USD,2019-12-28 15:24:04.167755
+NCLH,stock,Norwegian Cruise Line Holdings,Consumer Discretionary,USD,2019-12-28 15:24:04.167755
+NRG,stock,NRG Energy,Utilities,USD,2019-12-28 15:24:04.167755
+NUE,stock,Nucor Corp.,Materials,USD,2019-12-28 15:24:04.167755
+NVDA,stock,Nvidia Corporation,Information Technology,USD,2019-12-28 15:24:04.167755
+NVR,stock,NVR Inc,Consumer Discretionary,USD,2019-12-28 15:24:04.167755
+ORLY,stock,O'Reilly Automotive,Consumer Discretionary,USD,2019-12-28 15:24:04.167755
+OXY,stock,Occidental Petroleum,Energy,USD,2019-12-28 15:24:04.167755
+ODFL,stock,Old Dominion Freight Line,Industrials,USD,2019-12-28 15:24:04.167755
+OMC,stock,Omnicom Group,Communication Services,USD,2019-12-28 15:24:04.167755
+OKE,stock,ONEOK,Energy,USD,2019-12-28 15:24:04.167755
+ORCL,stock,Oracle Corp.,Information Technology,USD,2019-12-28 15:24:04.167755
+PCAR,stock,PACCAR Inc.,Industrials,USD,2019-12-28 15:24:04.167755
+PKG,stock,Packaging Corporation of America,Materials,USD,2019-12-28 15:24:04.167755
+PH,stock,Parker-Hannifin,Industrials,USD,2019-12-28 15:24:04.167755
+PAYX,stock,Paychex Inc.,Information Technology,USD,2019-12-28 15:24:04.167755
+PYPL,stock,PayPal,Information Technology,USD,2019-12-28 15:24:04.167755
+PNR,stock,Pentair plc,Industrials,USD,2019-12-28 15:24:04.167755
+PBCT,stock,People's United Financial,Financials,USD,2019-12-28 15:24:04.167755
+PEP,stock,PepsiCo Inc.,Consumer Staples,USD,2019-12-28 15:24:04.167755
+PKI,stock,PerkinElmer,Health Care,USD,2019-12-28 15:24:04.167755
+PRGO,stock,Perrigo,Health Care,USD,2019-12-28 15:24:04.167755
+PFE,stock,Pfizer Inc.,Health Care,USD,2019-12-28 15:24:04.167755
+PM,stock,Philip Morris International,Consumer Staples,USD,2019-12-28 15:24:04.167755
+PSX,stock,Phillips 66,Energy,USD,2019-12-28 15:24:04.167755
+PNW,stock,Pinnacle West Capital,Utilities,USD,2019-12-28 15:24:04.167755
+PXD,stock,Pioneer Natural Resources,Energy,USD,2019-12-28 15:24:04.167755
+PNC,stock,PNC Financial Services,Financials,USD,2019-12-28 15:24:04.167755
+PPG,stock,PPG Industries,Materials,USD,2019-12-28 15:24:04.167755
+PPL,stock,PPL Corp.,Utilities,USD,2019-12-28 15:24:04.167755
+PFG,stock,Principal Financial Group,Financials,USD,2019-12-28 15:24:04.167755
+PG,stock,Procter & Gamble,Consumer Staples,USD,2019-12-28 15:24:04.167755
+PGR,stock,Progressive Corp.,Financials,USD,2019-12-28 15:24:04.167755
+PLD,stock,Prologis,Real Estate,USD,2019-12-28 15:24:04.167755
+PRU,stock,Prudential Financial,Financials,USD,2019-12-28 15:24:04.167755
+PEG,stock,Public Serv. Enterprise Inc.,Utilities,USD,2019-12-28 15:24:04.167755
+PSA,stock,Public Storage,Real Estate,USD,2019-12-28 15:24:04.167755
+PHM,stock,Pulte Homes Inc.,Consumer Discretionary,USD,2019-12-28 15:24:04.167755
+PVH,stock,PVH Corp.,Consumer Discretionary,USD,2019-12-28 15:24:04.167755
+QRVO,stock,Qorvo,Information Technology,USD,2019-12-28 15:24:04.167755
+PWR,stock,Quanta Services Inc.,Industrials,USD,2019-12-28 15:24:04.167755
+QCOM,stock,QUALCOMM Inc.,Information Technology,USD,2019-12-28 15:24:04.167755
+DGX,stock,Quest Diagnostics,Health Care,USD,2019-12-28 15:24:04.167755
+RL,stock,Ralph Lauren Corporation,Consumer Discretionary,USD,2019-12-28 15:24:04.167755
+RJF,stock,Raymond James Financial Inc.,Financials,USD,2019-12-28 15:24:04.167755
+RTN,stock,Raytheon Co.,Industrials,USD,2019-12-28 15:24:04.167755
+O,stock,Realty Income Corporation,Real Estate,USD,2019-12-28 15:24:04.167755
+REG,stock,Regency Centers Corporation,Real Estate,USD,2019-12-28 15:24:04.167755
+REGN,stock,Regeneron Pharmaceuticals,Health Care,USD,2019-12-28 15:24:04.167755
+RF,stock,Regions Financial Corp.,Financials,USD,2019-12-28 15:24:04.167755
+RSG,stock,Republic Services Inc,Industrials,USD,2019-12-28 15:24:04.167755
+RMD,stock,ResMed,Health Care,USD,2019-12-28 15:24:04.167755
+RHI,stock,Robert Half International,Industrials,USD,2019-12-28 15:24:04.167755
+ROK,stock,Rockwell Automation Inc.,Industrials,USD,2019-12-28 15:24:04.167755
+ROL,stock,Rollins Inc.,Industrials,USD,2019-12-28 15:24:04.167755
+ROP,stock,Roper Technologies,Industrials,USD,2019-12-28 15:24:04.167755
+ROST,stock,Ross Stores,Consumer Discretionary,USD,2019-12-28 15:24:04.167755
+RCL,stock,Royal Caribbean Cruises Ltd,Consumer Discretionary,USD,2019-12-28 15:24:04.167755
+SPGI,stock,"S&P Global, Inc.",Financials,USD,2019-12-28 15:24:04.167755
+CRM,stock,Salesforce.com,Information Technology,USD,2019-12-28 15:24:04.167755
+SBAC,stock,SBA Communications,Real Estate,USD,2019-12-28 15:24:04.167755
+SLB,stock,Schlumberger Ltd.,Energy,USD,2019-12-28 15:24:04.167755
+STX,stock,Seagate Technology,Information Technology,USD,2019-12-28 15:24:04.167755
+SEE,stock,Sealed Air,Materials,USD,2019-12-28 15:24:04.167755
+SRE,stock,Sempra Energy,Utilities,USD,2019-12-28 15:24:04.167755
+NOW,stock,ServiceNow,Information Technology,USD,2019-12-28 15:24:04.167755
+SHW,stock,Sherwin-Williams,Materials,USD,2019-12-28 15:24:04.167755
+SPG,stock,Simon Property Group Inc,Real Estate,USD,2019-12-28 15:24:04.167755
+SWKS,stock,Skyworks Solutions,Information Technology,USD,2019-12-28 15:24:04.167755
+SLG,stock,SL Green Realty,Real Estate,USD,2019-12-28 15:24:04.167755
+SNA,stock,Snap-on,Industrials,USD,2019-12-28 15:24:04.167755
+SO,stock,Southern Co.,Utilities,USD,2019-12-28 15:24:04.167755
+LUV,stock,Southwest Airlines,Industrials,USD,2019-12-28 15:24:04.167755
+SWK,stock,Stanley Black & Decker,Industrials,USD,2019-12-28 15:24:04.167755
+SBUX,stock,Starbucks Corp.,Consumer Discretionary,USD,2019-12-28 15:24:04.167755
+STT,stock,State Street Corp.,Financials,USD,2019-12-28 15:24:04.167755
+SYK,stock,Stryker Corp.,Health Care,USD,2019-12-28 15:24:04.167755
+SIVB,stock,SVB Financial,Financials,USD,2019-12-28 15:24:04.167755
+SYF,stock,Synchrony Financial,Financials,USD,2019-12-28 15:24:04.167755
+SNPS,stock,Synopsys Inc.,Information Technology,USD,2019-12-28 15:24:04.167755
+SYY,stock,Sysco Corp.,Consumer Staples,USD,2019-12-28 15:24:04.167755
+TMUS,stock,T-Mobile US,Communication Services,USD,2019-12-28 15:24:04.167755
+TROW,stock,T. Rowe Price Group,Financials,USD,2019-12-28 15:24:04.167755
+TTWO,stock,Take-Two Interactive,Communication Services,USD,2019-12-28 15:24:04.167755
+TPR,stock,"Tapestry, Inc.",Consumer Discretionary,USD,2019-12-28 15:24:04.167755
+TGT,stock,Target Corp.,Consumer Discretionary,USD,2019-12-28 15:24:04.167755
+TEL,stock,TE Connectivity Ltd.,Information Technology,USD,2019-12-28 15:24:04.167755
+FTI,stock,TechnipFMC,Energy,USD,2019-12-28 15:24:04.167755
+TFX,stock,Teleflex,Health Care,USD,2019-12-28 15:24:04.167755
+TXN,stock,Texas Instruments,Information Technology,USD,2019-12-28 15:24:04.167755
+TXT,stock,Textron Inc.,Industrials,USD,2019-12-28 15:24:04.167755
+TMO,stock,Thermo Fisher Scientific,Health Care,USD,2019-12-28 15:24:04.167755
+TIF,stock,Tiffany & Co.,Consumer Discretionary,USD,2019-12-28 15:24:04.167755
+TJX,stock,TJX Companies Inc.,Consumer Discretionary,USD,2019-12-28 15:24:04.167755
+TSCO,stock,Tractor Supply Company,Consumer Discretionary,USD,2019-12-28 15:24:04.167755
+TDG,stock,TransDigm Group,Industrials,USD,2019-12-28 15:24:04.167755
+TRV,stock,The Travelers Companies Inc.,Financials,USD,2019-12-28 15:24:04.167755
+TRIP,stock,TripAdvisor,Communication Services,USD,2019-12-28 15:24:04.167755
+TFC,stock,Truist Financial,Financials,USD,2019-12-28 15:24:04.167755
+TWTR,stock,"Twitter, Inc.",Communication Services,USD,2019-12-28 15:24:04.167755
+TSN,stock,Tyson Foods,Consumer Staples,USD,2019-12-28 15:24:04.167755
+UDR,stock,"UDR, Inc.",Real Estate,USD,2019-12-28 15:24:04.167755
+ULTA,stock,Ulta Beauty,Consumer Discretionary,USD,2019-12-28 15:24:04.167755
+USB,stock,U.S. Bancorp,Financials,USD,2019-12-28 15:24:04.167755
+UAA,stock,Under Armour Class A,Consumer Discretionary,USD,2019-12-28 15:24:04.167755
+UA,stock,Under Armour Class C,Consumer Discretionary,USD,2019-12-28 15:24:04.167755
+UNP,stock,Union Pacific Corp,Industrials,USD,2019-12-28 15:24:04.167755
+UAL,stock,United Airlines Holdings,Industrials,USD,2019-12-28 15:24:04.167755
+UNH,stock,United Health Group Inc.,Health Care,USD,2019-12-28 15:24:04.167755
+UPS,stock,United Parcel Service,Industrials,USD,2019-12-28 15:24:04.167755
+URI,stock,"United Rentals, Inc.",Industrials,USD,2019-12-28 15:24:04.167755
+UTX,stock,United Technologies,Industrials,USD,2019-12-28 15:24:04.167755
+UHS,stock,"Universal Health Services, Inc.",Health Care,USD,2019-12-28 15:24:04.167755
+UNM,stock,Unum Group,Financials,USD,2019-12-28 15:24:04.167755
+VFC,stock,V.F. Corp.,Consumer Discretionary,USD,2019-12-28 15:24:04.167755
+VLO,stock,Valero Energy,Energy,USD,2019-12-28 15:24:04.167755
+VAR,stock,Varian Medical Systems,Health Care,USD,2019-12-28 15:24:04.167755
+VTR,stock,Ventas Inc,Real Estate,USD,2019-12-28 15:24:04.167755
+VRSN,stock,Verisign Inc.,Information Technology,USD,2019-12-28 15:24:04.167755
+VRSK,stock,Verisk Analytics,Industrials,USD,2019-12-28 15:24:04.167755
+VZ,stock,Verizon Communications,"Communication Services
+",USD,2019-12-28 15:24:04.167755
+VRTX,stock,Vertex Pharmaceuticals Inc,Health Care,USD,2019-12-28 15:24:04.167755
+VIAC,stock,ViacomCBS,Communication Services,USD,2019-12-28 15:24:04.167755
+V,stock,Visa Inc.,Information Technology,USD,2019-12-28 15:24:04.167755
+VNO,stock,Vornado Realty Trust,Real Estate,USD,2019-12-28 15:24:04.167755
+VMC,stock,Vulcan Materials,Materials,USD,2019-12-28 15:24:04.167755
+WRB,stock,W. R. Berkley Corporation,Financials,USD,2019-12-28 15:24:04.167755
+WAB,stock,Wabtec Corporation,Industrials,USD,2019-12-28 15:24:04.167755
+WMT,stock,Walmart,Consumer Staples,USD,2019-12-28 15:24:04.167755
+WBA,stock,Walgreens Boots Alliance,Consumer Staples,USD,2019-12-28 15:24:04.167755
+DIS,stock,The Walt Disney Company,Communication Services,USD,2019-12-28 15:24:04.167755
+WM,stock,Waste Management Inc.,Industrials,USD,2019-12-28 15:24:04.167755
+WAT,stock,Waters Corporation,Health Care,USD,2019-12-28 15:24:04.167755
+WEC,stock,Wec Energy Group Inc,Utilities,USD,2019-12-28 15:24:04.167755
+WCG,stock,WellCare,Health Care,USD,2019-12-28 15:24:04.167755
+WFC,stock,Wells Fargo,Financials,USD,2019-12-28 15:24:04.167755
+WELL,stock,Welltower Inc.,Real Estate,USD,2019-12-28 15:24:04.167755
+WDC,stock,Western Digital,Information Technology,USD,2019-12-28 15:24:04.167755
+WU,stock,Western Union Co,Information Technology,USD,2019-12-28 15:24:04.167755
+WRK,stock,WestRock,Materials,USD,2019-12-28 15:24:04.167755
+WY,stock,Weyerhaeuser,Real Estate,USD,2019-12-28 15:24:04.167755
+WHR,stock,Whirlpool Corp.,Consumer Discretionary,USD,2019-12-28 15:24:04.167755
+WMB,stock,Williams Cos.,Energy,USD,2019-12-28 15:24:04.167755
+WLTW,stock,Willis Towers Watson,Financials,USD,2019-12-28 15:24:04.167755
+WYNN,stock,Wynn Resorts Ltd,Consumer Discretionary,USD,2019-12-28 15:24:04.167755
+XEL,stock,Xcel Energy Inc,Utilities,USD,2019-12-28 15:24:04.167755
+XRX,stock,Xerox,Information Technology,USD,2019-12-28 15:24:04.167755
+XLNX,stock,Xilinx,Information Technology,USD,2019-12-28 15:24:04.167755
+XYL,stock,Xylem Inc.,Industrials,USD,2019-12-28 15:24:04.167755
+YUM,stock,Yum! Brands Inc,Consumer Discretionary,USD,2019-12-28 15:24:04.167755
+ZBH,stock,Zimmer Biomet Holdings,Health Care,USD,2019-12-28 15:24:04.167755
+ZION,stock,Zions Bancorp,Financials,USD,2019-12-28 15:24:04.167755
+ZTS,stock,Zoetis,Health Care,USD,2019-12-28 15:24:04.167755
+SPY,stock,ETF fund,Information Technology,USD,2019-12-28 15:24:04.167755
