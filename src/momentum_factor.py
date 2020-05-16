@@ -16,8 +16,6 @@ from config import *
 from sp500_symbols import *
 
 
-#from backtrader.plot.plot import run_cerebro_plot  #我自己编写的，运行时去掉
-
 """
 # 在交易信息之外，额外增加了PE、PB指标，做其他策略使用
 class GenericCSV_PB_PE(bt.feeds.GenericCSVData):
@@ -40,112 +38,139 @@ class momentum_factor_strategy(bt.Strategy):
     author = "jun chen"
     params = (("look_back_days",15),
               ("hold_days",15),
-              ("position_size",3))
+              ("portfolio_size",3))
 
     def log(self, txt, dt=None):
         ''' Logging function fot this strategy'''
         dt = dt or self.datas[0].datetime.date(0)
         print('{}, {}'.format(dt.isoformat(), txt))
 
-    def __init__(self, dataId_to_ticker_d, ticker_to_dataId_d):
+    def __init__(self, pool_list, dataId_to_ticker_d, ticker_to_dataId_d):
         # Keep a reference to the "close" line in the data[0] dataseries
         self.bar_num=0
         #self.index_50_date_stock_dict=self.get_index_50_date_stock()
         self.dataId_to_ticker_dict = dataId_to_ticker_d
         self.ticker_to_dataId_dict = ticker_to_dataId_d
         self.position_list = []
+        self.pool_list = pool_list
 
     def prenext(self):
-        pass 
+        #current_date=self.datas[0].datetime.date(0)
+        #self.log('prenext :' + str(self.broker.getvalue()), current_date)
+        #pass 
+        self.next()
         
     def next(self):
         # 假设有100万资金，每次成份股调整，每个股票使用1万元
         self.bar_num+=1
         # 需要调仓的时候
-        if self.bar_num%self.p.hold_days==0:
+        if self.bar_num % self.p.hold_days == 0:
             # 得到当天的时间
             current_date=self.datas[0].datetime.date(0)
+            self.log('start change position:' + str(self.broker.getvalue()), current_date)
+            
             # 获得当天的交易的股票
-            index_50_list = self.position_list #dataId_to_ticker_dict[str(current_date)]
-            self.position_list = []
+            index_50_list = self.pool_list #dataId_to_ticker_dict[str(current_date)]
             # 先全部平仓
-            for data in self.datas:
-                position_size=self.broker.getposition(data=data).size
-                if position_size!=0:
-                    self.close(data)
+            # for data in self.datas:
+            for stock in self.position_list:
+                sec_data = self.getdatabyname(stock)
+                
+                position_size = self.broker.getposition(data=sec_data).size
+                if position_size > 0:
+                    self.log('try sell:' + sec_data._name)
+                    self.sell(sec_data,size=position_size)
+                    #self.close(data)
+            self.position_list = []
 
             # 获取计算的因子
             result_list=[]
             for stock in index_50_list:
-                data=self.getdatabyname(stock)
-                if len(data)>self.p.look_back_days:
-                    now_close=data.close[0]
-                    pre_n_close=data.close[-self.p.look_back_days+1]
+                data = self.getdatabyname(stock)
+
+                #remove un-aligned data
+                if (data.datetime.date(0) != current_date):
+                    continue
+
+                if len(data) >= self.p.look_back_days :
+                    now_close = data.close[0]
+                    pre_n_close = data.close[-self.p.look_back_days+1]
                     # 对数据清洗的时候，默认缺失值等于0.0000001
                     if pre_n_close>0.01:
-                        rate=(now_close-pre_n_close)/pre_n_close
+                        rate = (now_close-pre_n_close) / pre_n_close
                         result_list.append([stock,rate])
+
             # 计算是否有新的股票并进行开仓    
-            long_list=[]
-            short_list=[]
+            to_sell_list=[]
+            to_buy_list=[]
             # self.log("index_300_list:{}".format(index_300_list))
-            # 新调入的股票做多
+            # 新调入的股票做多, sort from low growth rate to high growth rate
             sorted_result_list=sorted(result_list,key=lambda x:x[1])
-            short_list=[i[0] for i in sorted_result_list[:self.p.position_szie]]
-            long_list=[i[0] for i in sorted_result_list[-self.p.position_szie:]]
+
+            to_sell_list=[i[0] for i in sorted_result_list[:self.p.portfolio_size]]
+            to_buy_list=[i[0] for i in sorted_result_list[-self.p.portfolio_size:]]
             # 循环股票，决定做多和做空
             # 得到当前的账户价值
-            total_value = self.broker.getvalue()
-            every_stock_value = total_value/self.p.position_szie
+            # trade may be executed on next day, left some cash space 
+            total_value = self.broker.getvalue() * 0.95
+            every_stock_value = total_value/self.p.portfolio_size
             for data in self.datas:
-                if data._name in long_list:
+                """
+                if data._name in to_sell_list:
                     close_price=data.close[0]
                     lots=int(every_stock_value/close_price)
                     self.sell(data,size=lots)
-                if data._name in short_list:
+                """    
+                if data._name in to_buy_list:
                     close_price=data.close[0]
-                    lots=int(every_stock_value/close_price)
-                    self.buy(data,size=lots)
-                    self.position_list.append(data._name)
-    
-        
+                    if close_price > 0:
+                        lots=int(every_stock_value/(close_price+0.01))
+                        self.buy(data, size=lots, exectype=bt.Order.Market)
+                                 #valid=bt.Order.DAY)
+                        self.position_list.append(data._name)
+                        self.log('buy: ' + data._name + str(lots))
+
+            self.log('end change position', current_date)
+
         
     def notify_order(self, order):
+        #Created, Submitted, Accepted, Partial, Completed, \
+        #Canceled, Expired, Margin, Rejected = range(9)
         if order.status in [order.Submitted, order.Accepted]:
             # Buy/Sell order submitted/accepted to/by broker - Nothing to do
+            # dt=order.created.dt
+            # self.log('ORDER ACCEPTED/SUBMITTED '+ dt.strftime("%Y-%m-%d"))
+            #self.log('ORDER ACCEPTED/SUBMITTED '+ str(self.bar_num))
+            self.order = order
             return
 
-        # Check if an order has been completed
-        # Attention: broker could reject order if not enougth cash
-        if order.status in [order.Completed, order.Canceled, order.Margin]:
+        elif order.status in [order.Expired, order.Canceled, order.Margin]:
+            self.log('BUY EXPIRED' + str(order.status))
+
+            # Check if an order has been completed
+            # Attention: broker could reject order if not enougth cash
+        elif order.status in [order.Completed]:
             if order.isbuy():
                 self.log(
-                    'BUY EXECUTED, Price: %.2f, Cost: %.2f, Comm %.2f' %
-                    (order.executed.price,
+                    'BUY %s EXECUTED, Price: %.2f, Cost: %.2f, Comm %.2f' %
+                    (order.data._name,
+                     order.executed.price,
                      order.executed.value,
                      order.executed.comm))
             else:  # Sell
-                self.log('SELL EXECUTED, Price: %.2f, Cost: %.2f, Comm %.2f' %
-                         (order.executed.price,
+                self.log('SELL %s EXECUTED, Price: %.2f, Cost: %.2f, Comm %.2f' %
+                         (order.data._name,
+                          order.executed.price,
                           order.executed.value,
                           order.executed.comm))
                 
     def notify_trade(self, trade):
         if trade.isclosed:
             
-            self.log('TRADE PROFIT, GROSS %.2f, NET %.2f' %
-                     (trade.pnl, trade.pnlcomm))
+            self.log('TRADE %s PROFIT, GROSS %.2f, NET %.2f' %
+                     (trade.data._name, trade.pnl,  trade.pnlcomm))
 
-    """
-    def get_index_50_date_stock(self,ticker_list)data_path="/home/yun/data/index_50_date_stock_dict.pkl"):
-        '''从外部添加每个交易日的上证50的成分股代码'''
-        import pickle 
-        with open(data_path,'rb') as f:
-            data=pickle.load(f)
-        return data            
-    """
-
-
+# entry point
 begin_time=time.time()
 cerebro = bt.Cerebro()
 """
@@ -181,24 +206,39 @@ for file in file_list:
     cerebro.adddata(feed, name = file[:-4])
 """
 
-start_date = datetime.datetime(2010, 1,1),
-end_date = datetime.datetime(2019, 11, 29),
-ticker_list = ["AAPL", "AMZN", "MSFT", "CSCO", "FB"]
+start_date = datetime.datetime(2010, 1,1)
+#start_date = datetime.datetime(2015, 1,1)
+end_date = datetime.datetime(2019, 11, 29)
+# ticker_list[0] must cover start_date to end_date, as a reference
+ticker_list = get_sector_symbols("Information Technology")
+ticker_list.remove('HPE')
+del ticker_list[-1] #remove the last one, which is SPY
+#ticker_list = ["AAPL", "FB", "AMZN", "MSFT", "CSCO"]
+print(ticker_list)
+
+
 dataId_to_ticker_dic = {}
 ticker_to_dataId_dic = {}
 idx = 0
 for tk in ticker_list:
     filename = conf_backtest_data_path + tk + '.csv'
     trading_data_df = pd.read_csv(filename, index_col=0, parse_dates=True)
+    trading_data_df.drop(['Adj Close'], axis=1, inplace=True)
+    trading_data_df.index.names = ['date']
     trading_data_df.rename(columns={'Open' : 'open', 'High' : 'high', 'Low' : 'low',
-                    'Close' : 'close', 'Adj Close' : 'AdjClose',
-                    'Volume' : 'volume'}, inplace=True)
+                                    'Close' : 'close', 'Volume' : 'volume'}, inplace=True)
+    ## set data range by date
+    indexDates = trading_data_df[trading_data_df.index < start_date].index
+    # Delete these row indexes from dataFrame
+    trading_data_df.drop(indexDates , inplace=True)
     trading_data_df['openinterest'] = 0
     #trading_data_df.set_index('Date', inplace=True)
     data_feed = bt.feeds.PandasData(dataname=trading_data_df,
+                                    #fromdate = datetime.datetime(2010, 1, 4),
+                                    #todate = datetime.datetime(2019, 12, 31))
+
                                     fromdate=start_date,
-                                    todate=end_date,
-                                    dtformat=('%Y-%m-%d'))
+                                    todate=end_date)  # dtformat=('%Y-%m-%d'))
     cerebro.adddata(data_feed, name=tk)
     dataId_to_ticker_dic.update({idx:tk})
     ticker_to_dataId_dic.update({tk:idx})
@@ -208,22 +248,19 @@ for tk in ticker_list:
 cerebro.broker = bt.brokers.BackBroker(shortcash=True)  # 0.5%
 #cerebro.broker.set_slippage_fixed(1, slip_open=True)
 
-cerebro.broker.setcommission(commission=0.0005,stocklike=True)
+#cerebro.broker.setcommission(commission=5,margin=2000.0) #stocklike=True)
+cerebro.broker.setcommission(commission=0.0001,stocklike=True)
 cerebro.broker.setcash(100000.0)
 cerebro.addstrategy(momentum_factor_strategy,
-                    dataId_to_ticker_dic, ticker_to_dataId_dic)
+                    ticker_list, dataId_to_ticker_dic, ticker_to_dataId_dic)
                     #end_date.strftime("%Y-%m-%d"))
 # 添加相应的费用，杠杆率
 # 获取策略运行的指标
 print('Starting Portfolio Value: %.2f' % cerebro.broker.getvalue())
 results = cerebro.run()
-cerebro.plot()
+# cerebro.plot()
 end_time=time.time()
 print("total running time:{}".format(end_time-begin_time))
-
-
-
-
-
+print('Ending Portfolio Value: %.2f' % cerebro.broker.getvalue())
 
 
