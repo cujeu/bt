@@ -1,5 +1,4 @@
 
-# 按照标准动量策略做一个多因子回测的模板，开始测试各个单个因子能够带来超额alpha
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 import time 
@@ -16,18 +15,6 @@ from config import *
 from sp500_symbols import *
 
 
-"""
-# 在交易信息之外，额外增加了PE、PB指标，做其他策略使用
-class GenericCSV_PB_PE(bt.feeds.GenericCSVData):
-
-    # Add a 'pe' line to the inherited ones from the base class
-    lines = ('factor','pe_ratio','pb_ratio',)
-
-    # openinterest in GenericCSVData has index 7 ... add 1
-    # add the parameter to the parameters inherited from the base class
-    params = (('factor', 8),('pe_ratio',9),('pb_ratio',10),)
-
-"""
 class FixedCommisionScheme(bt.CommInfoBase):
     '''
     This is a simple fixed commission scheme
@@ -47,12 +34,16 @@ class FixedCommisionScheme(bt.CommInfoBase):
         """
         return self.p.commission
 
-# write strategy, pick top3 rise stock every hold_days=20 days
-class momentum_factor_strategy(bt.Strategy):
+# write strategy, if RSI over 30, then buy 10000 each time
+class rsi_factor_strategy(bt.Strategy):
     author = "jun chen"
-    params = (("look_back_days",15),
+    params = (("look_back_days",5),
               ("hold_days",15),
-              ("portfolio_size",5))
+              ("buy_cash",10000),
+              ("portfolio_size",3),
+              ("rsi_upper",70),
+              ("rsi_lower",30),
+              ('rsi_period', 15))
 
     def log(self, txt, dt=None):
         ''' Logging function fot this strategy'''
@@ -68,93 +59,99 @@ class momentum_factor_strategy(bt.Strategy):
         self.position_list = []
         self.pool_list = pool_list
 
+        self.rsi_list = []
+        for i in range(len(self.pool_list)):
+            rsi = bt.indicators.RSI(self.datas[i], period = self.p.rsi_period)
+            self.rsi_list.append(rsi)  #rsi type backtrader.indicators.rsi.RSI
+            #rsi = bt.indicators.RSI(period=self.p.rsi_per,upperband=self.p.rsi_upper, lowerband=self.p.rsi_lower)
+
     def prenext(self):
-        #self.current_date=self.datas[0].datetime.date(0)
-        #self.log('prenext :' + str(self.broker.getvalue()), self.current_date)
+        #current_date=self.datas[0].datetime.date(0)
+        #self.log('prenext :' + str(self.broker.getvalue()), current_date)
         #pass 
         self.next()
 
     def close_position(self):
-        # for data in self.datas:
+        # first , close out if RSI over 70
+        close_list = []
         for stock in self.position_list:
             sec_data = self.getdatabyname(stock)
-            
             position_size = self.broker.getposition(data=sec_data).size
-            if position_size > 0:
-                self.log('try sell:' + sec_data._name)
-                self.sell(sec_data, size = position_size)
-                #self.close(data)
-        self.position_list = []
+            rsi = self.rsi_list[self.ticker_to_dataId_dict[stock]]
+
+            if position_size > 0 and len(rsi) >= self.p.hold_days:
+                for idx in range(len(rsi) - self.p.hold_days):
+                    if rsi.lines.rsi[0-idx] > self.p.rsi_upper:
+                        self.log('try sell:' + sec_data._name)
+                        self.sell(sec_data,size=position_size)
+                        close_list.append(stock)
+                        #self.close(data)
+                        break
+
+        for stock in close_list:
+            if stock in self.position_list:
+                self.position_list.remove(stock)
+
+        return
 
     def find_swap_position(self):
-        # get factor
+        # get factor, add stock under rsi30 into result_list
         result_list=[]
         for stock in self.pool_list:
             data = self.getdatabyname(stock)
 
-            #no processing of un-aligned data
+            #remove un-aligned data
             if (data.datetime.date(0) != self.current_date):
                 continue
+            if data._name in self.position_list:
+                continue
 
-            if len(data) >= self.p.look_back_days :
-                now_close = data.close[0]
-                pre_n_close = data.close[-self.p.look_back_days+1]
-                # 对数据清洗的时候，默认缺失值等于0.0000001
-                if pre_n_close>0.01:
-                    rate = (now_close-pre_n_close) / pre_n_close
-                    result_list.append([stock,rate])
+            if (len(data) >= self.p.hold_days):
+                rsi = self.rsi_list[self.ticker_to_dataId_dict[stock]]
 
-        # 计算是否有新的股票并进行开仓    
-        # to_sell_list=[]
-        to_buy_list=[]
-        # self.log("index_300_list:{}".format(index_300_list))
-        # 新调入的股票做多, sort from low growth rate to high growth rate
-        sorted_result_list=sorted(result_list,key=lambda x:x[1])
+                #try find new target
+                if rsi.lines.rsi[0] > self.p.rsi_lower:
+                    for idx in range(self.p.look_back_days):
+                        if rsi.lines.rsi[0-idx] < self.p.rsi_lower:
+                            result_list.append(stock)
+                            break;
+        return result_list
 
-        # to_sell_list=[i[0] for i in sorted_result_list[:self.p.portfolio_size]]
-        to_buy_list=[i[0] for i in sorted_result_list[-self.p.portfolio_size:]]
-        return to_buy_list
-
-    def open_new_position(self, to_buy_list):
-        # 得到当前的账户价值
+    def open_new_position(self, buy_list):
+        # get current account value
         # trade may be executed on next day, left some cash space 
-        total_value = self.broker.getvalue() * 0.95
-        every_stock_value = total_value/self.p.portfolio_size
-        for data in self.datas:
-            """
-            if data._name in to_sell_list:
-                close_price=data.close[0]
-                lots=int(every_stock_value/close_price)
-                self.sell(data,size=lots)
-            """    
-            if data._name in to_buy_list:
-                close_price=data.close[0]
-                if close_price > 0:
-                    lots=int(every_stock_value/(close_price+0.01))
-                    self.buy(data, size=lots, exectype=bt.Order.Market)
-                             #valid=bt.Order.DAY)
-                    self.position_list.append(data._name)
-                    self.log('buy: ' + data._name + str(lots))
-        
+        # total_value = self.broker.getvalue() * 0.95
+        cur_cash = self.broker.cash
+        every_stock_value = self.p.buy_cash * 0.95
+        for stock in buy_list:
+            data = self.getdatabyname(stock)
+            close_price = data.close[0]
+            if close_price > 0 and cur_cash > every_stock_value:
+                lots=int(every_stock_value/(close_price+0.01))
+                self.buy(data, size=lots, exectype=bt.Order.Market)
+                         #valid=bt.Order.DAY)
+                #self.position_list.append(data._name)
+                cur_cash -= every_stock_value
+                self.log('buy: ' + data._name + str(lots))
+        return
+
     def next(self):
-        # from cash 100，use 10000 for each swap
+        # start from 100K cash，buy 10000 when swapping
         self.bar_num+=1
-        self.current_date=self.datas[0].datetime.date(0)
-        # time to swap postion
-        if self.bar_num % self.p.hold_days != 0:
+        # current bar time
+        self.current_date = self.datas[0].datetime.date(0)
+
+        # exchange
+        if self.bar_num % self.p.look_back_days != 0:
             return
-
-
+        
         self.log('start change position:' + str(self.broker.getvalue()), self.current_date)
-            
-        # 先全部平仓
         self.close_position()
 
-        # 循环股票，决定做多和做空
-        to_buy_list = self.find_swap_position()
+        buy_list = self.find_swap_position()
 
-        # open new position
-        self.open_new_position(to_buy_list)
+        # buy new stock
+        self.open_new_position(buy_list)
 
         self.log('end change position', self.current_date)
 
@@ -177,6 +174,7 @@ class momentum_factor_strategy(bt.Strategy):
             # Attention: broker could reject order if not enougth cash
         elif order.status in [order.Completed]:
             if order.isbuy():
+                self.position_list.append(order.data._name)
                 self.log(
                     'BUY %s EXECUTED, Price: %.2f, Cost: %.2f, Comm %.2f' %
                     (order.data._name,
@@ -243,38 +241,6 @@ def runstrat(args=None):
     # entry point
     begin_time=time.time()
     cerebro = bt.Cerebro()
-    """
-    # the oringinal code, usign CSV and data fiel
-    joinquant_day_kwargs = dict(
-                fromdate = datetime.datetime(2005, 1,1),
-                todate = datetime.datetime(2019, 11, 29),
-                timeframe = bt.TimeFrame.Days,
-                compression = 1,
-                dtformat=('%Y-%m-%d'),
-                datetime=0,
-                high=4,
-                low=3,
-                open=1,
-                close=2,
-                volume=5,
-                openinterest=6,
-                factor=7,
-                pb_ratio=10,
-                pe_ratio=11)
-    
-    data_path="/home/yun/data/stocks/"
-    with open("/home/yun/data/all_index_50_stock_list.pkl",'rb') as f:
-        file_list=pickle.load(f)
-    file_list=[i+'.csv' for i in file_list]
-    file_list=file_list
-    print(file_list)
-    count=0
-    for file in file_list:
-        print(count,file)
-        count+=1
-        feed = GenericCSV_PB_PE(dataname = data_path+file, **joinquant_day_kwargs)
-        cerebro.adddata(feed, name = file[:-4])
-    """
     
     start_date = datetime.datetime(2010, 1,1)
     #start_date = datetime.datetime(2015, 1,1)
@@ -283,7 +249,7 @@ def runstrat(args=None):
     ticker_list = get_sector_symbols("Information Technology")
     ticker_list.remove('HPE')
     del ticker_list[-1] #remove the last one, which is SPY
-    #ticker_list = ["AAPL", "FB", "AMZN", "MSFT", "CSCO", "GOOG", "INTC"]
+    #ticker_list = ["AAPL", "FB", "AMZN", "MSFT", "CSCO"]
     print(ticker_list)
     
     
@@ -323,11 +289,9 @@ def runstrat(args=None):
     cerebro.broker.addcommissioninfo(comminfo)
     #cerebro.broker.setcommission(commission=0.0001,stocklike=True)
     cerebro.broker.setcash(100000.0)
-    cerebro.addstrategy(momentum_factor_strategy,
+    cerebro.addstrategy(rsi_factor_strategy,
                         ticker_list, dataId_to_ticker_dic, ticker_to_dataId_dic)
                         #end_date.strftime("%Y-%m-%d"))
-    # 添加相应的费用，杠杆率
-    # 获取策略运行的指标
     print('Starting Portfolio Value: %.2f' % cerebro.broker.getvalue())
     results = cerebro.run()
     # cerebro.plot()
@@ -339,9 +303,7 @@ def runstrat(args=None):
 def parse_args(pargs=None):
     parser = argparse.ArgumentParser(
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
-        description=(
-            'Multiple Values and Brackets'
-        )
+        description=('Multiple Values and Brackets')
     )
 
     parser.add_argument('--data0', default='../data/backtest/AAPL.csv',
