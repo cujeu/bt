@@ -72,6 +72,14 @@ def read_csv_df():
     df_data = pd.read_csv(file_name)
     return df_data
 
+def get_etf_symbols():
+    etf_list =[ 'FNGU','FNGO','CWEB','TQQQ','ARKW',
+                'ARKG','ARKK','TECL','QLD' ,'ROM',
+                'ONLN','QCLN','IBUY','FDNI','PBW',
+                'ESPO','ARKQ','ARKF','UBOT','OGIG',
+                'ACES','TAN' ,'EMQQ','CNRG','SMOG']
+    return etf_list
+
 def get_all_symbols():
     df_data = read_csv_df()
     #column name:ticker,instrument,name,sector,currency,created_date

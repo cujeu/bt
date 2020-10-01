@@ -186,9 +186,9 @@ if __name__ == '__main__':
     # Add the Data Feed to Cerebro
     cerebro.adddata(data)
     # Set our desired cash start
-    cerebro.broker.setcash(100.0)
+    cerebro.broker.setcash(10000.0)
     # 设置每笔交易交易的股票数量
-    cerebro.addsizer(bt.sizers.FixedSize, stake=10)
+    cerebro.addsizer(bt.sizers.FixedSize, stake=20)
     # Set the commission
     cerebro.broker.setcommission(commission=0.0)
     # Print out the starting conditions

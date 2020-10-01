@@ -96,6 +96,7 @@ class momentum_factor_strategy(bt.Strategy):
             if (data.datetime.date(0) != self.current_date):
                 continue
 
+            # get the price delta during period of look_back_days
             if len(data) >= self.p.look_back_days :
                 now_close = data.close[0]
                 pre_n_close = data.close[-self.p.look_back_days+1]

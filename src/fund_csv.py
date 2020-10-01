@@ -55,7 +55,8 @@ def financial_ratios(ticker):
     data (dataframe)
         Data with variables in rows and the period in columns.
     """
-    urlstr = ("https://financialmodelingprep.com/api/v3/financial-ratios/" + ticker)
+    urlstr = "?apikey=61e6648f0fb7e4ea519b18744db9dc43"
+    urlstr = ("https://financialmodelingprep.com/api/v3/financial-ratios/" + ticker +urlstr)
     dj = get_jsonparsed_data(urlstr)
     data_json = dj['ratios']
 
@@ -76,7 +77,61 @@ def financial_ratios(ticker):
 
     return df
 
-def get_fundmental_pe(sector_name, beg_date, end_date):
+def financial_key_metrics(ticker):
+    """
+    Description
+    ----
+    Gives information about the financial keys metrics of a company overtime
+    which includes i.a. market values
+    url: https://financialmodelingprep.com/api/v3/key-metrics/AAPL?apikey=61e6648f0fb7e4ea519b18744db9dc43
+    quarterly https://financialmodelingprep.com/api/v3/key-metrics/AAPL?period=quarter&apikey=61e6648f0fb7e4ea519b18744db9dc43
+    Input
+    ----
+    ticker (string)
+        The company ticker (for example: "LYFT")
+    period (string)
+        Data period, this can be "annual" or "quarter".
+
+    Output
+    ----
+    data (dataframe)
+        Data with variables in rows and the period in columns.
+
+        date,symbol,revenuePerShare,netIncomePerShare,operatingCashFlowPerShare,
+        freeCashFlowPerShare,cashPerShare,bookValuePerShare,tangibleBookValuePerShare,
+        shareholdersEquityPerShare,interestDebtPerShare,marketCap,enterpriseValue,
+        peRatio,priceToSalesRatio,pocfratio,pfcfRatio,pbRatio,ptbRatio,evToSales,
+        enterpriseValueOverEBITDA,evToOperatingCashFlow,evToFreeCashFlow,earningsYield,
+        freeCashFlowYield,debtToEquity,debtToAssets,netDebtToEBITDA,currentRatio,
+        interestCoverage,incomeQuality,dividendYield,payoutRatio,salesGeneralAndAdministrativeToRevenue,
+        researchAndDdevelopementToRevenue,intangiblesToTotalAssets,capexToOperatingCashFlow,capexToRevenue,
+        capexToDepreciation,stockBasedCompensationToRevenue,grahamNumber,roic,
+        returnOnTangibleAssets,grahamNetNet,workingCapital,tangibleAssetValue,
+        netCurrentAssetValue,investedCapital,averageReceivables,averagePayables,
+        averageInventory,daysSalesOutstanding,daysPayablesOutstanding,daysOfInventoryOnHand,
+        receivablesTurnover,payablesTurnover,inventoryTurnover,roe,capexPerShare
+    """
+
+    urlstr = "?period=quarter&apikey=61e6648f0fb7e4ea519b18744db9dc43"
+    urlstr = "https://financialmodelingprep.com/api/v3/key-metrics/" + ticker + urlstr 
+    data_json = get_jsonparsed_data(urlstr)    # dj is list of dict
+    
+    list_df = []
+    idx = 1
+    for data in data_json:
+        df = pd.DataFrame(data, index=[idx])
+        list_df.append(df)
+        idx += 1
+
+    #df = pd.DataFrame(data_formatted).transpose()
+    df = pd.concat(list_df)
+    df.set_index('date',inplace = True)
+    #index.names = ['date']
+    df.sort_index(inplace = True, ascending=True)
+
+    return df
+
+def get_fundmental_key(sector_name, beg_date, end_date):
     tlist = get_sector_symbols(sector_name)
     #tlist = ["AAPL", "AMZN"]
     # Show the available companies
@@ -86,9 +141,24 @@ def get_fundmental_pe(sector_name, beg_date, end_date):
     for ticker in tlist:  
         print('download: '+ticker)
         
+        df = financial_key_metrics(ticker)
+        filename = conf_backtest_data_path + ticker+'_key.csv'
+        # write csv without index column
+        df.to_csv(filename, encoding='utf8')
+
+def get_fundmental_pe(sector_name, beg_date, end_date):
+    tlist = get_sector_symbols(sector_name)
+    # tlist = ["AAPL", "AMZN"]
+    # Show the available companies
+    #companies = fa.available_companies()
+    #print(type(companies))
+
+    for ticker in tlist:  
+        print('download: '+ticker)
+        
         df = financial_ratios(ticker)
         filename = conf_backtest_data_path + ticker+'_ratio.csv'
-        # write csv without index column
+        #write csv without index column
         df.to_csv(filename, encoding='utf8')
 
         """
@@ -170,7 +240,8 @@ def get_fundmental_csv(sector_name, beg_date, end_date):
 if __name__ == "__main__":
     beg_date = datetime.datetime(2010, 1, 1).strftime('%Y-%m-%d')
     end_date = datetime.datetime(2012, 1, 1).strftime('%Y-%m-%d')
-    get_fundmental_pe("Information Technology",beg_date, end_date)
+    get_fundmental_key("Information Technology",beg_date, end_date)
+    # get_fundmental_pe("Information Technology",beg_date, end_date)
     #get_fundmental_csv("Information Technology",beg_date, end_date)
     ##download_sector_prices("Consumer Staples",10)
     ##download_all_prices(10)

@@ -724,3 +724,64 @@ def standard_deviation(df, n, std_name, column_name = None):
     df.fillna(0, inplace=True )  #fill nan with 0
     return df
 
+def stc(ohlc,
+        period_fast = 23,
+        period_slow = 50,
+        period = 10,
+        adjust = True,
+        column_name = None):
+    """
+    Schaff Trend Cycle - Three input values are used with the STC:
+    – Sh: shorter-term Exponential Moving Average with a default period of 23
+    – Lg: longer-term Exponential Moving Average with a default period of 50
+    – Cycle, set at half the cycle length with a default value of 10.
+    The STC is calculated in the following order:
+    First, the 23-period and the 50-period EMA and the MACD values are calculated:
+    EMA1 = EMA (Close, Short Length);
+    EMA2 = EMA (Close, Long Length);
+    MACD = EMA1 – EMA2.
+    Second, the 10-period Stochastic from the MACD values is calculated:
+    %K (MACD) = %KV (MACD, 10);
+    %D (MACD) = %DV (MACD, 10);
+    Schaff = 100 x (MACD – %K (MACD)) / (%D (MACD) – %K (MACD)).
+    In case the STC indicator is decreasing, this indicates that the trend cycle
+    is falling, while the price tends to stabilize or follow the cycle to the downside.
+    In case the STC indicator is increasing, this indicates that the trend cycle
+    is up, while the price tends to stabilize or follow the cycle to the upside.
+    
+    //script from tradingview
+    factor=input(0.5)  
+    m = macd(close,fastLength,slowLength)     
+    v1 = lowest(m, length)
+    v2 = highest(m, length) - v1    
+    f1 = (v2 > 0 ? ((m - v1) / v2) * 100 : nz(f1[1])) 
+    pf = (na(pf[1]) ? f1 : pf[1] + (factor * (f1 - pf[1]))) 
+    v3 = lowest(pf, length) 
+    v4 = highest(pf, length) - v3     
+    f2 = (v4 > 0 ? ((pf - v3) / v4) * 100 : nz(f2[1])) 
+    pff = (na(pff[1]) ? f2 : pff[1] + (factor * (f2 - pff[1])))
+    pff
+    """
+    if column_name is None:
+        column_name = conf_close
+
+    EMA_fast = pd.Series(ohlc[column_name].ewm(ignore_na=False, span=period_fast, adjust=adjust).mean(),
+                         name="EMA_fast")
+    EMA_fast.fillna(0, inplace=True)
+
+    EMA_slow = pd.Series(ohlc[column_name].ewm(ignore_na=False, span=period_slow, adjust=adjust).mean(),
+                         name="EMA_slow")
+    EMA_slow.fillna(0, inplace=True)
+
+    MACD_ser = pd.Series((EMA_fast - EMA_slow), name="MACD")
+    STOK = pd.Series((MACD_ser - MACD_ser.rolling(window=period).min()) /
+            (MACD_ser.rolling(window=period).max() - MACD_ser.rolling(window=period).min()) * 100)
+    STOD = STOK.rolling(window=period).mean()
+
+    ## ohlc = ohlc.join(pd.Series(100 * (MACD_ser - (STOK * MACD_ser)) / ((STOD * MACD_ser) - (STOK * MACD_ser)),
+    ohlc = ohlc.join(pd.Series((100 * (MACD_ser - STOK ) / (STOD - STOK)),
+                               name="STC"))
+                               ## name="{0} period STC.".format(period) ), name="STC")
+    ohlc.fillna(0, inplace=True )  #fill nan with 0
+    return ohlc
+

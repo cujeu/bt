@@ -63,6 +63,10 @@ def get_price_yahoo(all_tickers, years):
         attempt+=1
     #end of while
 
+def download_etf_prices(years):
+    tlist = get_etf_symbols()
+    get_price_yahoo(tlist, years)
+
 def download_sector_prices(sector_name, years):
     tlist = get_sector_symbols(sector_name)
     get_price_yahoo(tlist, years)
@@ -72,7 +76,8 @@ def download_all_prices(years):
     get_price_yahoo(tlist, years)
 
 if __name__ == "__main__":
-    download_sector_prices("Information Technology",10)
+    download_etf_prices(5)
+    ##download_sector_prices("Information Technology",10)
     ##download_sector_prices("Consumer Staples",10)
     ##download_all_prices(10)
 
