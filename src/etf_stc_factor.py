@@ -35,32 +35,49 @@ class FixedCommisionScheme(bt.CommInfoBase):
         """
         return self.p.commission
 
+"""
+A quick MACD implementation with Histogram:
+from backtrader.indicators import EMA
+
+class MACD(Indicator):
+    lines = ('macd', 'signal', 'histo',)
+    params = (('period_me1', 12), ('period_me2', 26), ('period_signal', 9),)
+
+    def __init__(self):
+        me1 = EMA(self.data, period=self.p.period_me1)
+        me2 = EMA(self.data, period=self.p.period_me2)
+        self.l.macd = me1 - me2
+        self.l.signal = EMA(self.l.macd, period=self.p.period_signal)
+        self.l.histo = self.l.macd - self.l.signal
+"""
+
 class SchaffTrend(bt.Indicator):
-    lines = ('trend',)
+    lines = ('stc',)
     params = (
         ('fastPeriod', 23),
         ('slowPeriod', 50),
         ('kPeriod', 10),
         ('dPeriod', 3),
-        ('movav', btind.MovAv.Exponential)
-    )
+        ('movav', btind.MovAv.Exponential) )
 
     def __init__(self):
-        macd = self.p.movav(self.data, period=self.p.fastPeriod) - self.p.movav(self.data, period=self.p.slowPeriod)
-        high = btind.Highest(self.data, period=self.p.kPeriod)
-        low = btind.Lowest(self.data, period=self.p.kPeriod)
-        fastk1= btind.If(high-low > 0, (self.data(0)-low) / (high-low) * 100, 0)
+        stc_macd = self.p.movav(self.data, period=self.p.fastPeriod) - self.p.movav(self.data, period=self.p.slowPeriod)
+        high = btind.Highest(stc_macd, period=self.p.kPeriod)
+        low = btind.Lowest(stc_macd, period=self.p.kPeriod)
+        fastk1= btind.If(high-low > 0, (stc_macd-low) / (high-low) * 100, 0)
+        fastk1= btind.If(high-low > 0, (stc_macd-low) / (high-low) * 100, fastk1(-1))
         fastd1 = self.p.movav(fastk1, period=self.p.dPeriod)
 
         high2 = btind.Highest(fastd1, period=self.p.kPeriod)
         low2 = btind.Lowest(fastd1, period=self.p.kPeriod)
         fastk2 = btind.If(high2-low2 > 0, (fastd1(0)-low2) / (high2-low2) * 100, 0)
-        self.lines.trend = self.p.movav(fastk2, period=self.p.dPeriod)
+        fastk2 = btind.If(high2-low2 > 0, (fastd1(0)-low2) / (high2-low2) * 100, fastk2(-1))
+        self.lines.stc = self.p.movav(fastk2, period=self.p.dPeriod)
 
 # write strategy, pick top3 rise stock every hold_days=20 days
 class stc_factor_strategy(bt.Strategy):
     author = "jun chen"
-    params = (("look_back_days",15),
+    params = (("look_back_days",75),
               ("hold_days",15),
               ("portfolio_size",5))
 
@@ -78,15 +95,60 @@ class stc_factor_strategy(bt.Strategy):
         self.position_list = []
         self.pool_list = pool_list
 
+        for d in self.datas:
+            ## d.baseline = btind.ExponentialMovingAverage(d, period=21)
+            ## d.aroon = btind.AroonUpDown(d, period=14)
+            d.emaSig = btind.ExponentialMovingAverage(d, period=20)
+            d.emaBase = btind.ExponentialMovingAverage(d, period=40)
+            d.schaff = SchaffTrend(d)
+            self.log('stategy data init :' + d._name)
+
     def prenext(self):
         #self.current_date=self.datas[0].datetime.date(0)
         #self.log('prenext :' + str(self.broker.getvalue()), self.current_date)
         #pass 
         self.next()
 
-    def close_position(self):
-        # for data in self.datas:
+    def find_close_position(self):
+        # get factor
+        result_list=[]
+        """
+        # short signals
+        if d.volsig.up < d.volsig.down and d.schaff < 50 and d.volma > d.volma[-1]: # volume indicator
+        if d.aroon.aroonup > d.aroon.aroondown and d.madiff > d.madiff[-1]: # confirmation
+          self.sell(d, size=buysize)
+          d.long = False
+          available_cash -= d*buysize
+          # stoploss
+          d.stoploss = self.buy(d, size=buysize, exectype=bt.Order.StopTrail, trailamount=stoploss_diff)
+        """
         for stock in self.position_list:
+            data = self.getdatabyname(stock)
+
+            #no processing of un-aligned data
+            if (data.datetime.date(0) != self.current_date):
+                continue
+
+            # get the price delta during period of look_back_days
+            if len(data) >= self.p.look_back_days :
+                # before clean data, set default price to 0.0000001
+                # data.schaff < 50: # and d.volma > d.volma[-1]: # volume indicator
+                # if data.schaff.stc[0] < 50 and data.schaff.stc[-1] > 50:
+                if data.emaSig[0] < data.emaBase[0] and \
+                   data.emaSig[-1] >= data.emaBase[-1] and \
+                   data.schaff.stc[0] < 30:
+                    result_list.append(stock)
+                    self.log('stategy trigger short :' + stock + str(data.schaff.stc[-1]))
+
+        # find an close etf position
+        # self.log("index_300_list:{}".format(index_300_list))
+
+        # to_sell_list=[i[0] for i in sorted_result_list[:self.p.portfolio_size]]
+        return result_list
+
+    def close_position(self, to_sell_list):
+        # for data in self.datas:
+        for stock in to_sell_list:
             sec_data = self.getdatabyname(stock)
             
             position_size = self.broker.getposition(data=sec_data).size
@@ -96,9 +158,14 @@ class stc_factor_strategy(bt.Strategy):
                 #self.close(data)
         self.position_list = []
 
-    def find_swap_position(self):
+    def find_new_position(self):
         # get factor
         result_list=[]
+        """
+        # long signals
+        if d.volsig.up > d.volsig.down and d.schaff > 50 and d.volma > d.volma[-1]: # volume indicator
+        if d.aroon.aroonup > d.aroon.aroondown and d.madiff > d.madiff[-1]: # confirmation
+        """
         for stock in self.pool_list:
             data = self.getdatabyname(stock)
 
@@ -108,29 +175,27 @@ class stc_factor_strategy(bt.Strategy):
 
             # get the price delta during period of look_back_days
             if len(data) >= self.p.look_back_days :
-                now_close = data.close[0]
-                pre_n_close = data.close[-self.p.look_back_days+1]
-                # before clean data, set default price to 0.0000001
-                if pre_n_close>0.01:
-                    rate = (now_close-pre_n_close) / pre_n_close
-                    result_list.append([stock,rate])
+                # data.schaff > 50: #and d.volma > d.volma[-1]: # volume indicator data.schaff.lines.stc
+                # if data.schaff.stc[0] > 50 and data.schaff.stc[-1] < 50:
+                if data.emaSig[0] > data.emaBase[0] and \
+                   data.emaSig[-1] <= data.emaBase[-1] and \
+                   data.schaff.stc[0] > 50:
+                    result_list.append(stock)
+                    self.log('stategy trigger long :' + stock + str(data.schaff.stc[-1]))
 
         # find and open new etf position
-        # to_sell_list=[]
-        to_buy_list=[]
         # self.log("index_300_list:{}".format(index_300_list))
-        # load new long etf, sort from low growth rate to high growth rate
-        sorted_result_list = sorted(result_list,key=lambda x:x[1])
-
-        # to_sell_list=[i[0] for i in sorted_result_list[:self.p.portfolio_size]]
-        to_buy_list=[i[0] for i in sorted_result_list[-self.p.portfolio_size:]]
-        return to_buy_list
+        # to_buy_list=[i[0] for i in sorted_result_list[-self.p.portfolio_size:]]
+        return result_list
 
     def open_new_position(self, to_buy_list):
         # get the current balance
         # trade may be executed on next day, left some cash space 
-        total_value = self.broker.getvalue() * 0.95
-        every_stock_value = total_value/self.p.portfolio_size
+        cur_cash = self.broker.getcash() * 0.95
+        if cur_cash > 10000:
+            every_stock_value = 10000
+        else:
+            every_stock_value = cur_cash
         for data in self.datas:
             """
             if data._name in to_sell_list:
@@ -149,25 +214,28 @@ class stc_factor_strategy(bt.Strategy):
         
     def next(self):
         # from cash 100，use 10000 for each swap
-        self.bar_num+=1
-        self.current_date=self.datas[0].datetime.date(0)
-        # time to swap postion
-        if self.bar_num % self.p.hold_days != 0:
+        self.bar_num += 1
+        self.current_date = self.datas[0].datetime.date(0)
+        if self.bar_num < self.p.look_back_days :
             return
-
-
-        self.log('start change position:' + str(self.broker.getvalue()), self.current_date)
             
         # close all position
-        self.close_position()
+        to_sell_list = self.find_close_position()
 
         # loop the pool, make buy list
-        to_buy_list = self.find_swap_position()
+        to_buy_list = self.find_new_position()
 
-        # open new position
-        self.open_new_position(to_buy_list)
+        if len(to_buy_list) > 0 or len(to_sell_list) > 0:
 
-        self.log('end change position', self.current_date)
+            self.log('start change position:' + str(self.broker.getvalue()), self.current_date)
+
+            if len(to_sell_list) > 0:
+                self.close_position(to_sell_list)
+            # open new position
+            if len(to_buy_list) > 0:
+                self.open_new_position(to_buy_list)
+
+            self.log('end change position', self.current_date)
 
         
     def notify_order(self, order):
@@ -251,9 +319,6 @@ def runstrat(args=None):
         cerebro.plot(**eval('dict(' + args.plot + ')'))
     """
 
-    # entry point
-    begin_time=time.time()
-    cerebro = bt.Cerebro()
     """
     # the oringinal code, usign CSV and data fiel
     joinquant_day_kwargs = dict(
@@ -292,64 +357,76 @@ def runstrat(args=None):
     end_date = datetime.datetime(2020, 8, 1)
     # ticker_list[0] must cover start_date to end_date, as a reference
     ticker_list = get_etf_symbols()
-    #ticker_list = ['FNGU','FNGO','CWEB','TQQQ','ARKW','ARKG','ARKK','TECL','QLD' ,'ROM']
+    #ticker_list = ['TECL','FNGU','FNGO','CWEB','TQQQ','ARKW','ARKG','ARKK','QLD' ,'ROM']
+    ticker_list = ['TECL', 'FNGU','ARKK']
     print(ticker_list)
+    profit_value = 1.0;
+    init_cash = 100000.0
     
+    for ticker in ticker_list:
     
-    dataId_to_ticker_dic = {}
-    ticker_to_dataId_dic = {}
-    idx = 0
-    for tk in ticker_list:
-        filename = conf_backtest_data_path + tk + '.csv'
-        trading_data_df = pd.read_csv(filename, index_col=0, parse_dates=True)
-        trading_data_df.drop(['Adj Close'], axis=1, inplace=True)
-        trading_data_df.index.names = ['date']
-        trading_data_df.rename(columns={'Open' : 'open', 'High' : 'high', 'Low' : 'low',
-                                        'Close' : 'close', 'Volume' : 'volume'}, inplace=True)
-        ## set data range by date
-        indexDates = trading_data_df[trading_data_df.index < start_date].index
-        # Delete these row indexes from dataFrame
-        trading_data_df.drop(indexDates , inplace=True)
-        trading_data_df['openinterest'] = 0
-        #trading_data_df.set_index('Date', inplace=True)
-        data_feed = bt.feeds.PandasData(dataname=trading_data_df,
-                                        #fromdate = datetime.datetime(2010, 1, 4),
-                                        #todate = datetime.datetime(2019, 12, 31))
-    
-                                        fromdate=start_date,
-                                        todate=end_date)  # dtformat=('%Y-%m-%d'))
-        cerebro.adddata(data_feed, name=tk)
-        dataId_to_ticker_dic.update({idx:tk})
-        ticker_to_dataId_dic.update({tk:idx})
-        idx += 1
-    
-    
-    cerebro.broker = bt.brokers.BackBroker(shortcash=True)  # 0.5%
-    #cerebro.broker.set_slippage_fixed(1, slip_open=True)
-    
-    #Set commissions
-    comminfo = FixedCommisionScheme()
-    cerebro.broker.addcommissioninfo(comminfo)
-    #cerebro.broker.setcommission(commission=0.0001,stocklike=True)
-    cerebro.broker.setcash(100000.0)
-    cerebro.addstrategy(stc_factor_strategy,
-                        ticker_list, dataId_to_ticker_dic, ticker_to_dataId_dic)
-                        #end_date.strftime("%Y-%m-%d"))
-    print('Starting Portfolio Value: %.2f' % cerebro.broker.getvalue())
-    results = cerebro.run()
-    # cerebro.plot()
-    end_time=time.time()
-    print("total running time:{}".format(end_time-begin_time))
-    print('Ending Portfolio Value: %.2f' % cerebro.broker.getvalue())
+        # entry point
+        begin_time=time.time()
+        cerebro = bt.Cerebro()
+        dataId_to_ticker_dic = {}
+        ticker_to_dataId_dic = {}
+        idx = 0
+        cerebro_ticker_list = []
+        cerebro_ticker_list.append(ticker)
+        for tk in cerebro_ticker_list:
+            filename = conf_backtest_data_path + tk + '.csv'
+            trading_data_df = pd.read_csv(filename, index_col=0, parse_dates=True)
+            trading_data_df.drop(['Adj Close'], axis=1, inplace=True)
+            trading_data_df.index.names = ['date']
+            trading_data_df.rename(columns={'Open' : 'open', 'High' : 'high', 'Low' : 'low',
+                                            'Close' : 'close', 'Volume' : 'volume'}, inplace=True)
+            ## set data range by date
+            indexDates = trading_data_df[trading_data_df.index < start_date].index
+            # Delete these row indexes from dataFrame
+            trading_data_df.drop(indexDates , inplace=True)
+            trading_data_df['openinterest'] = 0
+            #trading_data_df.set_index('Date', inplace=True)
+            data_feed = bt.feeds.PandasData(dataname=trading_data_df,
+                                            #fromdate = datetime.datetime(2010, 1, 4),
+                                            #todate = datetime.datetime(2019, 12, 31))
+        
+                                            fromdate=start_date,
+                                            todate=end_date)  # dtformat=('%Y-%m-%d'))
+            cerebro.adddata(data_feed, name=tk)
+            dataId_to_ticker_dic.update({idx:tk})
+            ticker_to_dataId_dic.update({tk:idx})
+            idx += 1
+        
+        
+        cerebro.broker = bt.brokers.BackBroker(shortcash=True)  # 0.5%
+        #cerebro.broker.set_slippage_fixed(1, slip_open=True)
+        
+        #Set commissions
+        comminfo = FixedCommisionScheme()
+        cerebro.broker.addcommissioninfo(comminfo)
+        #cerebro.broker.setcommission(commission=0.0001,stocklike=True)
+        cerebro.broker.setcash(init_cash)
+        cerebro.addstrategy(stc_factor_strategy,
+                            cerebro_ticker_list, dataId_to_ticker_dic, ticker_to_dataId_dic)
+                            #end_date.strftime("%Y-%m-%d"))
+        #cerebro.addindicator(SchaffTrend)
+        print('Starting Portfolio Value: %.2f' % cerebro.broker.getvalue())
+        results = cerebro.run()
+        # cerebro.plot()
+        end_time=time.time()
+        print("total running time:{}".format(end_time-begin_time))
+        print('Ending Portfolio Value: %.2f' % cerebro.broker.getvalue())
+        #final_value += cerebro.broker.getcash() + cerebro.broker.getvalue - init_cast
+        #final_value = final_value + cerebro.broker.getcash() + cerebro.broker.getvalue() - init_cash
+        profit_value = profit_value + cerebro.broker.getvalue() - init_cash
 
+    #end of for loop
+    print ("++++++++++ profit_value: " + str(profit_value))
 
 def parse_args(pargs=None):
     parser = argparse.ArgumentParser(
-        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
-        description=(
-            'Multiple Values and Brackets'
-        )
-    )
+        formatter_class = argparse.ArgumentDefaultsHelpFormatter,
+        description=('Multiple Values and Brackets'))
 
     parser.add_argument('--data0', default='../data/backtest/AAPL.csv',
                         required=False, help='Data0 to read in')
