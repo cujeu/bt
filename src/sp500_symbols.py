@@ -28,12 +28,12 @@ def obtain_parse_wiki_snp500():
   #  table = soup.find('table', {'class': 'wikitable sortable'})
   symbollist = soup.select('table')[0].select('tr')[1:]
   # Obtain the symbol information for each row in the S&P500 constituent table
-  symbols = pd.DataFrame(columns=['ticker', 'instrument', 'name', 'sector', 'currency', 'created_date'])
+  symbols = pd.DataFrame(columns=['ticker', 'instrument', 'name', 'sector', 'industry','currency', 'created_date'])
   for i, symbol in enumerate(symbollist):
     tds = symbol.select('td')
     # Create a tuple (for the DB format) and append to the grand list
     td_list = [tds[0].select('a')[0].text, 'stock', tds[1].select('a')[0].text,
-                   tds[3].text,'USD', now]
+                   tds[3].text,tds[4].text,'USD', now]
 
     symbols.loc[i] = td_list
     """
@@ -52,6 +52,7 @@ def obtain_parse_wiki_snp500():
             'stock', 
             tds[1].select('a')[0].text,  #name
             tds[3].text,  #'sector'], 
+            tds[4].text,
             'USD', now 
         )
     )

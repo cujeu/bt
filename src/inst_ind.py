@@ -5,6 +5,50 @@ import backtrader as bt
 import backtrader.feeds as btfeeds
 import backtrader.indicators as btind
 
+class MyStochastic1(bt.Indicator):
+    lines = ('k', 'd', 'mystoc',)  # declare the output lines
+    params = (
+        ('k_period', 14),  # lookback period for highest/lowest
+        ('d_period', 3),  # smoothing period for d with the SMA
+    )
+
+    def __init__(self):
+        # declare the highest/lowest
+        highest = bt.ind.Highest(self.data, period=self.p.k_period)
+        lowest = bt.ind.Lowest(self.data, period=self.p.k_period)
+        # calculate and assign lines
+        self.lines.k = k = (self.data - lowest) / (highest - lowest)
+        self.lines.d = d = bt.ind.SMA(k, period=self.p.d_period)
+        self.lines.mystoc = abs(k - k(-1)) / 2.0
+
+class MyStochastic2(bt.Indicator):
+    lines = ('k', 'd', 'mystoc',)
+    # manually counted period
+    # 14 for the fast moving k
+    # 3 for the slow moving d
+    # No extra for the previous k (-1) is needed because
+    # already buffers more than the 1 period lookback
+    # If we were doing d - d(-1), there is nothing making
+    # sure k(-1) is being buffered and an extra 1 would be needed
+    params = (
+        ('k_period', 14),  # lookback period for highest/lowest
+        ('d_period', 3),  # smoothing period for d with the SMA
+    )
+    def __init__(self):
+        self.addminperiod(self.p.k_period + self.p.d_period)
+
+    def next(self):
+        # Get enough data points to calculate k and do it
+        d = self.data.get(size=self.p.k_period)
+        hi = max(d)
+        lo = min(d)
+        self.lines.k[0] = k0 = (self.data[0] - lo) / (hi - lo)
+        # Get enough ks to calculate the SMA of k. Assign to d
+        last_ks = self.l.k.get(size=self.p.d_period)
+        self.lines.d[0] = sum(last_ks) / self.p.d_period
+        # Now calculate mystoc
+        self.lines.mystoc[0] = abs(k0 - self.l.k[-1]) / 2.0
+
 class MyTrix(bt.Indicator):
 
     lines = ('trix',)
@@ -16,6 +60,19 @@ class MyTrix(bt.Indicator):
         ema3 = btind.EMA(ema2, period=self.p.period)
 
         self.lines.trix = 100.0 * (ema3 - ema3(-1)) / ema3(-1)
+
+class PriceDiv(bt.Indicator):
+    #lines = ('cs',)
+    lines = ('cs', 'sm',)
+    params = (('shortPeriod', 20),
+              ('midPeriod', 60),)
+
+    def __init__(self):
+        ema20 = btind.EMA(self.data, period=self.p.shortPeriod)
+        ema60 = btind.EMA(self.data, period=self.p.midPeriod)
+        self.lines.cs = ((self.data - ema20) / ema20) * 100.0
+        self.lines.sm = ((ema20 - ema60) / ema60) * 100.0
+        # ml=(ema(close,60) - ema(close,120)) / ema(close,120) * 100
 
 class SchaffTrend(bt.Indicator):
     lines = ('stc',)
@@ -46,7 +103,8 @@ class NoStrategy(bt.Strategy):
 
     def __init__(self):
         self.bar_num = 0
-        MyTrix(self.data, period=self.p.trixperiod)
+        #MyTrix(self.data, period=self.p.trixperiod)
+        self.data_priceDiv = PriceDiv(self.data)
         self.data_schaff = SchaffTrend(self.data)
         #print(self.data.schaff.lines.stc)
 
@@ -59,7 +117,8 @@ class NoStrategy(bt.Strategy):
         #print(self.bar_num, len(self.data_schaff.lines.stc), self.data_schaff.lines.stc[self.bar_num-1])
         idx = len(self.data_schaff.lines[0]) - 1
         print(self.bar_num, len(self.data_schaff.lines[0]),
-              self.data_schaff.stc[0], self.data_schaff.stc[-1])
+              self.data_schaff.stc[0], self.data_schaff.stc[-1],
+              self.data_priceDiv.cs[0])
         #print(self.bar_num, len(self.data_schaff.lines[0]),
         #      self.data_schaff.lines[0].array[idx], self.data_schaff.lines[0].array[idx-1])
         
