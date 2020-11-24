@@ -1,4 +1,4 @@
-# momentum factor for ETF poll
+# price divergence factor for ETF poll
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 import time 
@@ -65,31 +65,9 @@ class PriceDiv(bt.Indicator):
         self.lines.cs = ((self.data - ema20) / ema20) * 100.0
         self.lines.sm = ((ema20 - ema60) / ema60) * 100.0
 
-class SchaffTrend(bt.Indicator):
-    lines = ('stc',)
-    params = (
-        ('fastPeriod', 23),
-        ('slowPeriod', 50),
-        ('kPeriod', 10),
-        ('dPeriod', 3),
-        ('movav', btind.MovAv.Exponential) )
-
-    def __init__(self):
-        stc_macd = self.p.movav(self.data, period=self.p.fastPeriod) - self.p.movav(self.data, period=self.p.slowPeriod)
-        high = btind.Highest(stc_macd, period=self.p.kPeriod)
-        low = btind.Lowest(stc_macd, period=self.p.kPeriod)
-        fastk1= btind.If(high-low > 0, (stc_macd-low) / (high-low) * 100, 0)
-        fastk1= btind.If(high-low > 0, (stc_macd-low) / (high-low) * 100, fastk1(-1))
-        fastd1 = self.p.movav(fastk1, period=self.p.dPeriod)
-
-        high2 = btind.Highest(fastd1, period=self.p.kPeriod)
-        low2 = btind.Lowest(fastd1, period=self.p.kPeriod)
-        fastk2 = btind.If(high2-low2 > 0, (fastd1(0)-low2) / (high2-low2) * 100, 0)
-        fastk2 = btind.If(high2-low2 > 0, (fastd1(0)-low2) / (high2-low2) * 100, fastk2(-1))
-        self.lines.stc = self.p.movav(fastk2, period=self.p.dPeriod)
 
 # write strategy
-class div_stc_strategy(bt.Strategy):
+class div_ema_strategy(bt.Strategy):
     author = "jun chen"
     params = (("look_back_days",75),
               ("hold_days",15),
@@ -108,12 +86,13 @@ class div_stc_strategy(bt.Strategy):
         self.ticker_to_dataId_dict = ticker_to_dataId_d
         self.position_list = []
         self.pool_list = pool_list
+        self.divUnder = 0   #weight of price divergence
 
         for d in self.datas:
             ## d.baseline = btind.ExponentialMovingAverage(d, period=21)
             d.ema20 = btind.ExponentialMovingAverage(d, period=20)
+            d.ema60 = btind.ExponentialMovingAverage(d, period=60)
             d.priceDiv = PriceDiv(d)
-            d.schaff = SchaffTrend(d)
             self.log('stategy data init :' + d._name)
 
     def prenext(self):
@@ -125,16 +104,7 @@ class div_stc_strategy(bt.Strategy):
     def find_close_position(self):
         # get factor
         result_list=[]
-        """
-        # short signals
-        if d.volsig.up < d.volsig.down and d.schaff < 50 and d.volma > d.volma[-1]: # volume indicator
-        if d.aroon.aroonup > d.aroon.aroondown and d.madiff > d.madiff[-1]: # confirmation
-          self.sell(d, size=buysize)
-          d.long = False
-          available_cash -= d*buysize
-          # stoploss
-          d.stoploss = self.buy(d, size=buysize, exectype=bt.Order.StopTrail, trailamount=stoploss_diff)
-        """
+        div_gap = 0.4   #remove frequent trading
         for stock in self.position_list:
             data = self.getdatabyname(stock)
 
@@ -145,15 +115,13 @@ class div_stc_strategy(bt.Strategy):
             # get the price delta during period of look_back_days
             if len(data) >= self.p.look_back_days :
                 # before clean data, set default price to 0.0000001
-                # data.schaff < 50: # and d.volma > d.volma[-1]: # volume indicator
-                """
-                first option
-                if data.priceDiv.cs[0] < data.priceDiv.sm[0] and \
-                   data.priceDiv.cs[-1] >= data.priceDiv.sm[-1] :
-                """
-                if data.schaff.stc[0] < 50 and data.schaff.stc[-1] > 50:
+                sm_thresh = data.priceDiv.sm[0] * div_gap
+                if (data.priceDiv.cs[0] < 0 and \
+                    data.priceDiv.cs[-1] >= 0) or \
+                   (data.priceDiv.cs[0] < sm_thresh and \
+                    data.priceDiv.cs[-1] >= sm_thresh) :
                     result_list.append(stock)
-                    self.log('stategy trigger short :' + stock + str(data.priceDiv.cs[0]))
+                    self.log('stategy trigger short :' + stock + ' cs=' + str(data.priceDiv.cs[0])+ ' sm=' + str(data.priceDiv.sm[0]))
 
         # find an close etf position
         # self.log("index_300_list:{}".format(index_300_list))
@@ -168,7 +136,7 @@ class div_stc_strategy(bt.Strategy):
             
             position_size = self.broker.getposition(data=sec_data).size
             if position_size > 0:
-                self.log('try sell:' + sec_data._name)
+                #self.log('try sell:' + sec_data._name)
                 self.sell(sec_data, size = position_size)
                 #self.close(data)
         self.position_list = []
@@ -176,43 +144,30 @@ class div_stc_strategy(bt.Strategy):
     def find_new_position(self):
         # get factor
         result_list=[]
-        """
-        # long signals
-        if d.volsig.up > d.volsig.down and d.schaff > 50 and d.volma > d.volma[-1]: # volume indicator
-        if d.aroon.aroonup > d.aroon.aroondown and d.madiff > d.madiff[-1]: # confirmation
-        """
         for stock in self.pool_list:
             data = self.getdatabyname(stock)
 
             #no processing of un-aligned data
             if (data.datetime.date(0) != self.current_date):
                 continue
+            #skip multi-long case
             if (stock in self.position_list):
                 continue
 
             # get the price delta during period of look_back_days
             if len(data) >= self.p.look_back_days :
-                # data.schaff > 50: #and d.volma > d.volma[-1]: # volume indicator data.schaff.lines.stc
                 
-                """
-                this is first option
-                if data.priceDiv.cs[0] > data.priceDiv.sm[0] and \
-                   data.priceDiv.cs[-1] <= data.priceDiv.sm[-1] and \
-                   (data.schaff.stc[-1] < 50 or \
-                    data.schaff.stc[-3] < 50 or \
-                    data.schaff.stc[-5] < 50):
-                """
-                if data.schaff.stc[0] > 30 and data.schaff.stc[-1] < 30:
-                    # travel last 10 days to find priceDiv.cs < 2
-                    cs_cnt = 0;
-                    for x in range(10):
-                        if data.priceDiv.cs[0-x] < 2 :
-                            cs_cnt += 1
-                    if cs_cnt > 5 or \
-                       (data.ema20[0] > data.ema20[-2] and \
-                        data.close[0] > data.ema20[0]):
+                # entry point: cs back and ema keep up
+                #if data.priceDiv.cs[0] > data.priceDiv.sm[0] and \
+                #   data.priceDiv.cs[-1] <= data.priceDiv.sm[-1] and \
+                if (self.divUnder) > 30 or \
+                   (self.divUnder > 3 and
+                    data.ema20[0] > data.ema20[-2] and \
+                    data.ema20[0] > data.ema60[0]):
+                    ##data.ema60[0] > data.ema60[-1]):
                         result_list.append(stock)
-                        self.log('stategy trigger long :' + stock + str(data.schaff.stc[-1]))
+                        self.log('stategy trigger long :' + stock + ' divUnder=' +str(self.divUnder))
+                        self.divUnder = 2
 
         # find and open new etf position
         # self.log("index_300_list:{}".format(index_300_list))
@@ -235,7 +190,7 @@ class div_stc_strategy(bt.Strategy):
                     self.buy(data, size=lots, exectype=bt.Order.Market)
                              #valid=bt.Order.DAY)
                     self.position_list.append(data._name)
-                    self.log('buy: ' + data._name + str(lots))
+                    #self.log('buy: ' + data._name + str(lots))
         
     def next(self):
         # from cash 100，use 10000 for each swap
@@ -243,6 +198,23 @@ class div_stc_strategy(bt.Strategy):
         self.current_date = self.datas[0].datetime.date(0)
         if self.bar_num < self.p.look_back_days :
             return
+        #for stock in self.pool_list:
+        #    data = self.getdatabyname(stock)
+        
+        if self.datas[0].priceDiv.cs[0] < 0:
+            self.divUnder += 1
+        else:
+            if self.divUnder > 0:
+                self.divUnder -= 1
+
+        if self.datas[0].priceDiv.sm[0] < 0:
+            self.divUnder += 2
+        else:
+            if self.divUnder > 1:
+                self.divUnder -= 2
+            else:
+                self.divUnder = 0
+
             
         # close all position
         to_sell_list = self.find_close_position()
@@ -431,7 +403,7 @@ def runstrat(args=None):
         cerebro.broker.addcommissioninfo(comminfo)
         #cerebro.broker.setcommission(commission=0.0001,stocklike=True)
         cerebro.broker.setcash(init_cash)
-        cerebro.addstrategy(div_stc_strategy,
+        cerebro.addstrategy(div_ema_strategy,
                             cerebro_ticker_list, dataId_to_ticker_dic, ticker_to_dataId_dic)
                             #end_date.strftime("%Y-%m-%d"))
         #cerebro.addindicator(SchaffTrend)
@@ -442,6 +414,7 @@ def runstrat(args=None):
         print("total running time:{}".format(end_time-begin_time))
         print('Ending Portfolio Value: %.2f' % cerebro.broker.getvalue())
         print('+++')
+        print('')
         #final_value += cerebro.broker.getcash() + cerebro.broker.getvalue - init_cast
         #final_value = final_value + cerebro.broker.getcash() + cerebro.broker.getvalue() - init_cash
         profit_value = profit_value + cerebro.broker.getvalue() - init_cash
