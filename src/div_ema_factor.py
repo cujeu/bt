@@ -14,6 +14,7 @@ import backtrader.indicators as btind
 import pandas as pd
 from config import *
 from sp500_symbols import *
+from inst_ind import *
 
 
 class FixedCommisionScheme(bt.CommInfoBase):
@@ -51,10 +52,12 @@ class MACD(Indicator):
         self.l.histo = self.l.macd - self.l.signal
 """
 
+"""
 class PriceDiv(bt.Indicator):
-    lines = ('cs', 'sm',)
+    lines = ('cs', 'sm', 'ml')
     params = (('shortPeriod', 20),
-              ('midPeriod', 60),)
+              ('midPeriod', 60),
+              ('longPeriod', 120),)
 
     def __init__(self):
         #ema20 = btind.ExponentialMovingAverage(self.data, period=self.p.shortPeriod)
@@ -62,9 +65,11 @@ class PriceDiv(bt.Indicator):
 
         ema20 = btind.EMA(self.data, period=self.p.shortPeriod)
         ema60 = btind.EMA(self.data, period=self.p.midPeriod)
+        ema120 = btind.EMA(self.data, period=self.p.longPeriod)
         self.lines.cs = ((self.data - ema20) / ema20) * 100.0
         self.lines.sm = ((ema20 - ema60) / ema60) * 100.0
-
+        self.lines.ml = ((ema60 - ema120) / ema120) * 100.0
+"""
 
 # write strategy
 class div_ema_strategy(bt.Strategy):
@@ -156,12 +161,13 @@ class div_ema_strategy(bt.Strategy):
 
             # get the price delta during period of look_back_days
             if len(data) >= self.p.look_back_days :
+                #self.log('test :' + stock + str(self.divUnder)+ ' ema20=' +str(data.ema20[0]) + ' ema20=' +str(data.ema20[-2]))
                 
                 # entry point: cs back and ema keep up
                 #if data.priceDiv.cs[0] > data.priceDiv.sm[0] and \
                 #   data.priceDiv.cs[-1] <= data.priceDiv.sm[-1] and \
                 if (self.divUnder) > 30 or \
-                   (self.divUnder > 3 and
+                   (self.divUnder >= 3 and
                     data.ema20[0] > data.ema20[-2] and \
                     data.ema20[0] > data.ema60[0]):
                     ##data.ema60[0] > data.ema60[-1]):
@@ -203,19 +209,14 @@ class div_ema_strategy(bt.Strategy):
         
         if self.datas[0].priceDiv.cs[0] < 0:
             self.divUnder += 1
+            if self.datas[0].priceDiv.sm[0] < 0:
+                self.divUnder += 2
+
+            #self.log('the date ' + str(self.divUnder) + " dt: " + str(self.current_date))
         else:
             if self.divUnder > 0:
                 self.divUnder -= 1
 
-        if self.datas[0].priceDiv.sm[0] < 0:
-            self.divUnder += 2
-        else:
-            if self.divUnder > 1:
-                self.divUnder -= 2
-            else:
-                self.divUnder = 0
-
-            
         # close all position
         to_sell_list = self.find_close_position()
 
@@ -232,7 +233,7 @@ class div_ema_strategy(bt.Strategy):
             if len(to_buy_list) > 0:
                 self.open_new_position(to_buy_list)
 
-            self.log('end change position', self.current_date)
+            self.log('end change position ' + str(self.current_date))
 
         
     def notify_order(self, order):
@@ -351,7 +352,7 @@ def runstrat(args=None):
     
     start_date = datetime.datetime(2015, 1,1)
     #start_date = datetime.datetime(2015, 1,1)
-    end_date = datetime.datetime(2020, 8, 1)
+    end_date = datetime.datetime(2020, 11, 1)
     # ticker_list[0] must cover start_date to end_date, as a reference
     ticker_list = get_etf_symbols()
     #ticker_list = ['TECL','FNGU','FNGO','CWEB','TQQQ','ARKW','ARKG','ARKK','QLD' ,'ROM']

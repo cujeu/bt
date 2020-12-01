@@ -14,6 +14,7 @@ import backtrader.indicators as btind
 import pandas as pd
 from config import *
 from sp500_symbols import *
+from inst_ind import *
 
 
 class FixedCommisionScheme(bt.CommInfoBase):
@@ -51,42 +52,6 @@ class MACD(Indicator):
         self.l.histo = self.l.macd - self.l.signal
 """
 
-class PriceDiv(bt.Indicator):
-    lines = ('cs', 'sm',)
-    params = (('shortPeriod', 20),
-              ('midPeriod', 60),)
-
-    def __init__(self):
-        #ema20 = btind.ExponentialMovingAverage(self.data, period=self.p.shortPeriod)
-        #ema60 = btind.ExponentialMovingAverage(self.data, period=self.p.midPeriod)
-
-        ema20 = btind.EMA(self.data, period=self.p.shortPeriod)
-        ema60 = btind.EMA(self.data, period=self.p.midPeriod)
-        self.lines.cs = ((self.data - ema20) / ema20) * 100.0
-        self.lines.sm = ((ema20 - ema60) / ema60) * 100.0
-
-class SchaffTrend(bt.Indicator):
-    lines = ('stc',)
-    params = (
-        ('fastPeriod', 23),
-        ('slowPeriod', 50),
-        ('kPeriod', 10),
-        ('dPeriod', 3),
-        ('movav', btind.MovAv.Exponential) )
-
-    def __init__(self):
-        stc_macd = self.p.movav(self.data, period=self.p.fastPeriod) - self.p.movav(self.data, period=self.p.slowPeriod)
-        high = btind.Highest(stc_macd, period=self.p.kPeriod)
-        low = btind.Lowest(stc_macd, period=self.p.kPeriod)
-        fastk1= btind.If(high-low > 0, (stc_macd-low) / (high-low) * 100, 0)
-        fastk1= btind.If(high-low > 0, (stc_macd-low) / (high-low) * 100, fastk1(-1))
-        fastd1 = self.p.movav(fastk1, period=self.p.dPeriod)
-
-        high2 = btind.Highest(fastd1, period=self.p.kPeriod)
-        low2 = btind.Lowest(fastd1, period=self.p.kPeriod)
-        fastk2 = btind.If(high2-low2 > 0, (fastd1(0)-low2) / (high2-low2) * 100, 0)
-        fastk2 = btind.If(high2-low2 > 0, (fastd1(0)-low2) / (high2-low2) * 100, fastk2(-1))
-        self.lines.stc = self.p.movav(fastk2, period=self.p.dPeriod)
 
 # write strategy
 class div_stc_strategy(bt.Strategy):
@@ -379,7 +344,7 @@ def runstrat(args=None):
     
     start_date = datetime.datetime(2015, 1,1)
     #start_date = datetime.datetime(2015, 1,1)
-    end_date = datetime.datetime(2020, 8, 1)
+    end_date = datetime.datetime(2020, 11, 1)
     # ticker_list[0] must cover start_date to end_date, as a reference
     ticker_list = get_etf_symbols()
     #ticker_list = ['TECL','FNGU','FNGO','CWEB','TQQQ','ARKW','ARKG','ARKK','QLD' ,'ROM']

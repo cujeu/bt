@@ -5,9 +5,10 @@
                  "Financials","Materials","Real Estate","Consumer Staples",
                  "Energy"],
     "ohlv":  ["formatted_date","open", "high", "low", "close","adjclose","volume"],
-    "backtest_data_path" : "/home/jun/proj/bt/data/backtest/",
-    "data_path" : "/home/jun/proj/bt/data/",
-    "rawdata_path" : "/home/jun/proj/bt/data/raw/",
+    "app_path" : "/home/jun/proj/vw/",
+    "backtest_data_path" : "data/backtest/",
+    "data_path" : "data/",
+    "rawdata_path" : "data/raw/",
     "sp500_url": "https://en.wikipedia.org/wiki/List_of_S%26P_500_companies",
     "sp500_name" : "sp500.csv",
     "api_key" : "?apikey=61e6648f0fb7e4ea519b18744db9dc43"

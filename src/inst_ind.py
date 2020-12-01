@@ -62,17 +62,21 @@ class MyTrix(bt.Indicator):
         self.lines.trix = 100.0 * (ema3 - ema3(-1)) / ema3(-1)
 
 class PriceDiv(bt.Indicator):
-    #lines = ('cs',)
-    lines = ('cs', 'sm',)
+    lines = ('cs', 'sm', 'ml')
     params = (('shortPeriod', 20),
-              ('midPeriod', 60),)
+              ('midPeriod', 60),
+              ('longPeriod', 120),)
 
     def __init__(self):
+        #ema20 = btind.ExponentialMovingAverage(self.data, period=self.p.shortPeriod)
+        #ema60 = btind.ExponentialMovingAverage(self.data, period=self.p.midPeriod)
+
         ema20 = btind.EMA(self.data, period=self.p.shortPeriod)
         ema60 = btind.EMA(self.data, period=self.p.midPeriod)
+        ema120 = btind.EMA(self.data, period=self.p.longPeriod)
         self.lines.cs = ((self.data - ema20) / ema20) * 100.0
         self.lines.sm = ((ema20 - ema60) / ema60) * 100.0
-        # ml=(ema(close,60) - ema(close,120)) / ema(close,120) * 100
+        self.lines.ml = ((ema60 - ema120) / ema120) * 100.0
 
 class SchaffTrend(bt.Indicator):
     lines = ('stc',)
@@ -96,7 +100,7 @@ class SchaffTrend(bt.Indicator):
         fastk2 = btind.If(high2-low2 > 0, (fastd1(0)-low2) / (high2-low2) * 100, 0)
         fastk2 = btind.If(high2-low2 > 0, (fastd1(0)-low2) / (high2-low2) * 100, fastk2(-1))
         self.lines.stc = self.p.movav(fastk2, period=self.p.dPeriod)
-        print(len(self.lines.stc))
+        #print(len(self.lines.stc))
 
 class NoStrategy(bt.Strategy):
     params = (('trixperiod', 15),)

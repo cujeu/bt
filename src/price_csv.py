@@ -76,8 +76,8 @@ def download_all_prices(years):
     get_price_yahoo(tlist, years)
 
 if __name__ == "__main__":
-    download_etf_prices(5)
+    ##download_etf_prices(5)
     ##download_sector_prices("Information Technology",10)
     ##download_sector_prices("Consumer Staples",10)
-    ##download_all_prices(10)
+    download_all_prices(10)
 
