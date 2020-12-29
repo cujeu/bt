@@ -4,7 +4,7 @@
                  "Communication Services","Consumer Discretionary","Utilities",
                  "Financials","Materials","Real Estate","Consumer Staples",
                  "Energy"],
-    "ohlv":  ["formatted_date","open", "high", "low", "close","adjclose","volume"],
+    "ohlv":     ["formatted_date","open", "high", "low", "close","adjclose","volume"],
     "app_path" : "/home/jun/proj/vw/",
     "backtest_data_path" : "data/backtest/",
     "data_path" : "data/",

@@ -65,7 +65,7 @@ BAC,stock,Bank of America Corp,Financials,Diversified Banks,USD,2020-10-21 02:46
 BK,stock,The Bank of New York Mellon,Financials,Asset Management & Custody Banks,USD,2020-10-21 02:46:36.159667
 BAX,stock,Baxter International Inc.,Health Care,Health Care Equipment,USD,2020-10-21 02:46:36.159667
 BDX,stock,Becton Dickinson,Health Care,Health Care Equipment,USD,2020-10-21 02:46:36.159667
-BRK.B,stock,Berkshire Hathaway,Financials,Multi-Sector Holdings,USD,2020-10-21 02:46:36.159667
+BRK-B,stock,Berkshire Hathaway,Financials,Multi-Sector Holdings,USD,2020-10-21 02:46:36.159667
 BBY,stock,Best Buy Co. Inc.,Consumer Discretionary,Computer & Electronics Retail,USD,2020-10-21 02:46:36.159667
 BIO,stock,Bio-Rad Laboratories,Health Care,Life Sciences Tools & Services,USD,2020-10-21 02:46:36.159667
 BIIB,stock,Biogen Inc.,Health Care,Biotechnology,USD,2020-10-21 02:46:36.159667
@@ -78,7 +78,7 @@ BSX,stock,Boston Scientific,Health Care,Health Care Equipment,USD,2020-10-21 02:
 BMY,stock,Bristol-Myers Squibb,Health Care,Health Care Distributors,USD,2020-10-21 02:46:36.159667
 AVGO,stock,Broadcom Inc.,Information Technology,Semiconductors,USD,2020-10-21 02:46:36.159667
 BR,stock,Broadridge Financial Solutions,Information Technology,Data Processing & Outsourced Services,USD,2020-10-21 02:46:36.159667
-BF.B,stock,Brown-Forman Corp.,Consumer Staples,Distillers & Vintners,USD,2020-10-21 02:46:36.159667
+BF-B,stock,Brown-Forman Corp.,Consumer Staples,Distillers & Vintners,USD,2020-10-21 02:46:36.159667
 CHRW,stock,C. H. Robinson Worldwide,Industrials,Air Freight & Logistics,USD,2020-10-21 02:46:36.159667
 COG,stock,Cabot Oil & Gas,Energy,Oil & Gas Exploration & Production,USD,2020-10-21 02:46:36.159667
 CDNS,stock,Cadence Design Systems,Information Technology,Application Software,USD,2020-10-21 02:46:36.159667

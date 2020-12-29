@@ -15,8 +15,8 @@ import pandas as pd
 from config import *
 from sp500_symbols import *
 from inst_ind import *
-
-
+        
+mk_view_list = []
 
 # write strategy
 class div_ema_scan_strategy(bt.Strategy):
@@ -40,6 +40,14 @@ class div_ema_scan_strategy(bt.Strategy):
         self.pool_list = pool_list
         self.newLowDiv = 100
         self.newLowIndex = 0
+        self.csCount = 0
+
+        #mk_view_list order [ticker, cs, sm, ml]
+        global mk_view_list
+        mk_view_list = []
+        mk_view_list.append(pool_list[0])
+        for x in range(len(conf_mk_view_col)-1):
+            mk_view_list.append(0)
 
         for d in self.datas:
             ## d.baseline = btind.ExponentialMovingAverage(d, period=21)
@@ -49,6 +57,20 @@ class div_ema_scan_strategy(bt.Strategy):
             self.log('stategy data init :' + d._name)
 
     def stop(self):
+        stock = self.pool_list[0]
+        data = self.getdatabyname(stock)
+        global mk_view_list
+        mk_view_list[conf_chg5_idx] = round(100 * (data.close[0] - data.close[-5]) / (data.close[-5] + 0.01),2)
+        mk_view_list[conf_chg10_idx] = round(100 * (data.close[0] - data.close[-10]) / (data.close[-10] + 0.01),2)
+        mk_view_list[conf_cs0Cnt_idx] = self.csCount
+        mk_view_list[conf_cs_idx] = round(data.priceDiv.cs[0],2)
+        mk_view_list[conf_csChg_idx] = round(data.priceDiv.cs[0] - data.priceDiv.cs[-1], 2)
+        mk_view_list[conf_sm_idx] = round(data.priceDiv.sm[0],2)
+        mk_view_list[conf_ml_idx] = round(data.priceDiv.ml[0],2)
+        mk_view_list[conf_ema20_idx] = round(data.ema20[0],2)
+        mk_view_list[conf_ema20Chg_idx] = round(data.ema20[0] - data.ema20[-2],2)
+        mk_view_list[conf_ema60_idx] = round(data.ema60[0],2)
+
         if len(self.position_list) > 0:
             self.log('last div low:' + self.position_list[-1])
 
@@ -99,9 +121,16 @@ class div_ema_scan_strategy(bt.Strategy):
         self.current_date = self.datas[0].datetime.date(0)
         if self.bar_num < self.p.look_back_days :
             return
-        #for stock in self.pool_list:
-        #    data = self.getdatabyname(stock)
-        
+
+        data = self.getdatabyname(self.pool_list[0])        
+        if data.priceDiv.cs[0] >= 0:
+            if (self.csCount > 1):
+                self.csCount -= 2
+            elif (self.csCount > 0):
+                self.csCount -= 1
+        else:
+            self.csCount += 1
+
         to_watch_list = self.find_new_div_low()
 
         #if len(to_watch_list) > 0 :
@@ -144,7 +173,179 @@ class div_ema_scan_strategy(bt.Strategy):
             self.log('TRADE %s PROFIT, GROSS %.2f, NET %.2f' %
                      (trade.data._name, trade.pnl,  trade.pnlcomm))
 
+def start_scan(ticker_list, start_date, end_date):
+    profit_value = 1.0;
+    init_cash = 100000.0
+    #mk_df = pd.DataFrame([["a",1, 2, 3]], columns = ["sym", "cs", "sm", "ml"])
+    mk_df = pd.DataFrame(columns = conf_mk_view_col)
+    """
+    if 'LGVW' in ticker_list:
+        ticker_list.remove('LGVW')
+    if 'U' in ticker_list:
+        ticker_list.remove('U')
+    if 'BEKE' in ticker_list:
+        ticker_list.remove('BEKE')
+    if 'MASS' in ticker_list:
+        ticker_list.remove('MASS')
+    if 'OPEN' in ticker_list:
+        ticker_list.remove('OPEN')
+    """
+    if 'LSPD' in ticker_list:
+        ticker_list.remove('LSPD')
+    if 'KSPI' in ticker_list:
+        ticker_list.remove('KSPI')
+    if 'ADYEN' in ticker_list:
+        ticker_list.remove('ADYEN')
+    if 'LUMN' in ticker_list:
+        ticker_list.remove('LUMN')
+    for ticker in ticker_list:
+    
+        # entry point
+        begin_time=time.time()
+        cerebro = bt.Cerebro()
+        dataId_to_ticker_dic = {}
+        ticker_to_dataId_dic = {}
+        idx = 0
+        cerebro_ticker_list = []
+        cerebro_ticker_list.append(ticker)
+        len_enough = True
+        for tk in cerebro_ticker_list:
+            filename = conf_backtest_data_path + tk + '.csv'
+            trading_data_df = pd.read_csv(filename, index_col=0, parse_dates=True)
+            #check row count
+            if trading_data_df.shape[0] < 150:
+                len_enough = False
+                break;
+            trading_data_df.drop(['Adj Close'], axis=1, inplace=True)
+            trading_data_df.index.names = ['date']
+            trading_data_df.rename(columns={'Open' : 'open', 'High' : 'high', 'Low' : 'low',
+                                            'Close' : 'close', 'Volume' : 'volume'}, inplace=True)
+            ## set data range by date
+            indexDates = trading_data_df[trading_data_df.index < start_date].index
+            # Delete these row indexes from dataFrame
+            trading_data_df.drop(indexDates , inplace=True)
+            trading_data_df['openinterest'] = 0
+            #trading_data_df.set_index('Date', inplace=True)
+            data_feed = bt.feeds.PandasData(dataname=trading_data_df,
+                                            #fromdate = datetime.datetime(2010, 1, 4),
+                                            #todate = datetime.datetime(2019, 12, 31))
+        
+                                            fromdate=start_date,
+                                            todate=end_date)  # dtformat=('%Y-%m-%d'))
+            cerebro.adddata(data_feed, name=tk)
+            dataId_to_ticker_dic.update({idx:tk})
+            ticker_to_dataId_dic.update({tk:idx})
+            idx += 1
+        
+        if not len_enough:
+            continue
+        
+        cerebro.broker = bt.brokers.BackBroker(shortcash=True)  # 0.5%
+        #cerebro.broker.set_slippage_fixed(1, slip_open=True)
+        
+        #cerebro.broker.setcommission(commission=0.0001,stocklike=True)
+        cerebro.broker.setcash(init_cash)
+
+        cerebro.addstrategy(div_ema_scan_strategy,
+                            cerebro_ticker_list, dataId_to_ticker_dic, ticker_to_dataId_dic)
+                            #end_date.strftime("%Y-%m-%d"))
+        #cerebro.addindicator(SchaffTrend)
+        print('Starting Scanning')
+        results = cerebro.run()
+        # cerebro.plot()
+        end_time=time.time()
+        print("total running time:{}".format(end_time-begin_time))
+        print('Ending [%s]', ', '.join(map(str,mk_view_list)))
+        print('+++')
+        print('')
+        
+        #add list to dataframe
+        mk_df.loc[len(mk_df)] = mk_view_list
+        #final_value += cerebro.broker.getcash() + cerebro.broker.getvalue - init_cast
+        #final_value = final_value + cerebro.broker.getcash() + cerebro.broker.getvalue() - init_cash
+        profit_value = profit_value + cerebro.broker.getvalue() - init_cash
+
+    #end of for loop
+    print(mk_df)
+    print ("++++++++++  ")
+    return mk_df
+
+def parse_args(pargs=None):
+    parser = argparse.ArgumentParser(
+        formatter_class = argparse.ArgumentDefaultsHelpFormatter,
+        description=('Multiple Values and Brackets'))
+
+    parser.add_argument('--data0', default='../data/backtest/AAPL.csv',
+                        required=False, help='Data0 to read in')
+
+    parser.add_argument('--data1', default='../data/backtest/AMZN.csv',
+                        required=False, help='Data1 to read in')
+
+    parser.add_argument('--data2', default='../data/backtest/MSFT.csv',
+                        required=False, help='Data1 to read in')
+
+    # Defaults for dates
+    parser.add_argument('--fromdate', required=False, default='2011-01-01',
+                        help='Date[time] in YYYY-MM-DD[THH:MM:SS] format')
+
+    parser.add_argument('--todate', required=False, default='2017-01-01',
+                        help='Date[time] in YYYY-MM-DD[THH:MM:SS] format')
+
+    parser.add_argument('--cerebro', required=False, default='',
+                        metavar='kwargs', help='kwargs in key=value format')
+
+    parser.add_argument('--broker', required=False, default='',
+                        metavar='kwargs', help='kwargs in key=value format')
+
+    parser.add_argument('--sizer', required=False, default='',
+                        metavar='kwargs', help='kwargs in key=value format')
+
+    parser.add_argument('--strat', required=False, default='',
+                        metavar='kwargs', help='kwargs in key=value format')
+
+    parser.add_argument('--plot', required=False, default='',
+                        nargs='?', const='{}',
+                        metavar='kwargs', help='kwargs in key=value format')
+
+    return parser.parse_args(pargs)
+
+    
 def runstrat(args=None):
+    today = datetime.datetime.today().date()
+    shift = datetime.timedelta(max(1,(today.weekday() + 6) % 7 - 3))
+    end_date = today - shift + datetime.timedelta(days=1)
+    start_date = datetime.datetime(2015, 1,1)
+    #start_date = end_date - datetime.timedelta(days=5*365)-datetime.timedelta(days=1)
+    # ticker_list[0] must cover start_date to end_date, as a reference
+    ticker_list = get_etf_symbols()
+    #ticker_list = ['TECL','FNGU','FNGO','CWEB','TQQQ','ARKW','ARKG','ARKK','QLD' ,'ROM']
+    #ticker_list = ['TECL', 'FNGU','ARKK']
+    #print(ticker_list)
+    mk_df = start_scan(ticker_list, start_date, end_date)
+    filename = conf_data_path + 'etf.csv'
+    mk_df.to_csv(filename, encoding='utf8')
+
+    #ticker_list = get_ark_symbols()
+    DATETIME_FORMAT = '%y%m%d'
+    csv_dir = os.path.join(conf_data_path ,'csv')
+    csv_list = os.listdir(csv_dir)
+    csv_list.sort()
+    if len(csv_list) > 0:
+        date_str = csv_list[-1]
+    else:
+        date_str = datetime.datetime.strftime(datetime.datetime.now(), DATETIME_FORMAT)
+
+    ticker_list = get_all_ark_symbol(date_str)
+    mk_df = start_scan(ticker_list, start_date, end_date)
+    mk_df = add_ark_diff(mk_df, date_str)
+    filename = conf_data_path + 'ark.csv'
+    mk_df.to_csv(filename, encoding='utf8')
+
+    ticker_list = get_all_symbols()
+    mk_df = start_scan(ticker_list, start_date, end_date)
+    filename = conf_data_path + 'allsp500.csv'
+    mk_df.to_csv(filename, encoding='utf8')
+
     """
     args = parse_args(args)
 
@@ -220,116 +421,6 @@ def runstrat(args=None):
         feed = GenericCSV_PB_PE(dataname = data_path+file, **joinquant_day_kwargs)
         cerebro.adddata(feed, name = file[:-4])
     """
-    
-    start_date = datetime.datetime(2015, 1,1)
-    #start_date = datetime.datetime(2015, 1,1)
-    end_date = datetime.datetime(2020, 11, 1)
-    # ticker_list[0] must cover start_date to end_date, as a reference
-    ticker_list = get_etf_symbols()
-    #ticker_list = ['TECL','FNGU','FNGO','CWEB','TQQQ','ARKW','ARKG','ARKK','QLD' ,'ROM']
-    ticker_list = ['TECL', 'FNGU','ARKK']
-    print(ticker_list)
-    profit_value = 1.0;
-    init_cash = 100000.0
-    
-    for ticker in ticker_list:
-    
-        # entry point
-        begin_time=time.time()
-        cerebro = bt.Cerebro()
-        dataId_to_ticker_dic = {}
-        ticker_to_dataId_dic = {}
-        idx = 0
-        cerebro_ticker_list = []
-        cerebro_ticker_list.append(ticker)
-        for tk in cerebro_ticker_list:
-            filename = conf_backtest_data_path + tk + '.csv'
-            trading_data_df = pd.read_csv(filename, index_col=0, parse_dates=True)
-            trading_data_df.drop(['Adj Close'], axis=1, inplace=True)
-            trading_data_df.index.names = ['date']
-            trading_data_df.rename(columns={'Open' : 'open', 'High' : 'high', 'Low' : 'low',
-                                            'Close' : 'close', 'Volume' : 'volume'}, inplace=True)
-            ## set data range by date
-            indexDates = trading_data_df[trading_data_df.index < start_date].index
-            # Delete these row indexes from dataFrame
-            trading_data_df.drop(indexDates , inplace=True)
-            trading_data_df['openinterest'] = 0
-            #trading_data_df.set_index('Date', inplace=True)
-            data_feed = bt.feeds.PandasData(dataname=trading_data_df,
-                                            #fromdate = datetime.datetime(2010, 1, 4),
-                                            #todate = datetime.datetime(2019, 12, 31))
-        
-                                            fromdate=start_date,
-                                            todate=end_date)  # dtformat=('%Y-%m-%d'))
-            cerebro.adddata(data_feed, name=tk)
-            dataId_to_ticker_dic.update({idx:tk})
-            ticker_to_dataId_dic.update({tk:idx})
-            idx += 1
-        
-        
-        cerebro.broker = bt.brokers.BackBroker(shortcash=True)  # 0.5%
-        #cerebro.broker.set_slippage_fixed(1, slip_open=True)
-        
-        #cerebro.broker.setcommission(commission=0.0001,stocklike=True)
-        cerebro.broker.setcash(init_cash)
-        cerebro.addstrategy(div_ema_scan_strategy,
-                            cerebro_ticker_list, dataId_to_ticker_dic, ticker_to_dataId_dic)
-                            #end_date.strftime("%Y-%m-%d"))
-        #cerebro.addindicator(SchaffTrend)
-        print('Starting Scanning')
-        results = cerebro.run()
-        # cerebro.plot()
-        end_time=time.time()
-        print("total running time:{}".format(end_time-begin_time))
-        print('Ending ')
-        print('+++')
-        print('')
-        #final_value += cerebro.broker.getcash() + cerebro.broker.getvalue - init_cast
-        #final_value = final_value + cerebro.broker.getcash() + cerebro.broker.getvalue() - init_cash
-        profit_value = profit_value + cerebro.broker.getvalue() - init_cash
-
-    #end of for loop
-    print ("++++++++++  ")
-
-def parse_args(pargs=None):
-    parser = argparse.ArgumentParser(
-        formatter_class = argparse.ArgumentDefaultsHelpFormatter,
-        description=('Multiple Values and Brackets'))
-
-    parser.add_argument('--data0', default='../data/backtest/AAPL.csv',
-                        required=False, help='Data0 to read in')
-
-    parser.add_argument('--data1', default='../data/backtest/AMZN.csv',
-                        required=False, help='Data1 to read in')
-
-    parser.add_argument('--data2', default='../data/backtest/MSFT.csv',
-                        required=False, help='Data1 to read in')
-
-    # Defaults for dates
-    parser.add_argument('--fromdate', required=False, default='2011-01-01',
-                        help='Date[time] in YYYY-MM-DD[THH:MM:SS] format')
-
-    parser.add_argument('--todate', required=False, default='2017-01-01',
-                        help='Date[time] in YYYY-MM-DD[THH:MM:SS] format')
-
-    parser.add_argument('--cerebro', required=False, default='',
-                        metavar='kwargs', help='kwargs in key=value format')
-
-    parser.add_argument('--broker', required=False, default='',
-                        metavar='kwargs', help='kwargs in key=value format')
-
-    parser.add_argument('--sizer', required=False, default='',
-                        metavar='kwargs', help='kwargs in key=value format')
-
-    parser.add_argument('--strat', required=False, default='',
-                        metavar='kwargs', help='kwargs in key=value format')
-
-    parser.add_argument('--plot', required=False, default='',
-                        nargs='?', const='{}',
-                        metavar='kwargs', help='kwargs in key=value format')
-
-    return parser.parse_args(pargs)
-
-
+ 
 if __name__ == '__main__':
     runstrat()

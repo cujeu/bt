@@ -1,6 +1,7 @@
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 
+import datetime
 import backtrader as bt
 import backtrader.feeds as btfeeds
 import backtrader.indicators as btind
@@ -128,6 +129,13 @@ class NoStrategy(bt.Strategy):
         
 
 if __name__ == '__main__':
+    today = datetime.datetime.today().date()
+    shift = datetime.timedelta(max(1,(today.weekday() + 6) % 7 - 3))
+    end_date = today - shift + datetime.timedelta(days=1)
+    start_date = end_date - datetime.timedelta(days=5*365)-datetime.timedelta(days=1)
+    #start_date = end_date - datetime.timedelta(weeks=4)-datetime.timedelta(days=1)
+    print(today, shift, end_date, start_date)
+
     # Create a cerebro entity
     cerebro = bt.Cerebro()
 

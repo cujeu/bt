@@ -20,7 +20,7 @@ def get_price_yahoo(all_tickers, years):
     #cols = ["Date","Open", "High", "Low", "Close","Adj Close","Volume"]
     # other order: Date,Open,High,Low,Close,Adj Close,Volume
     # anther order Date,Open,High,Low,Close,Volume,Adj Close
-    while len(cp_tickers) != 0 and attempt <= 3:
+    while len(cp_tickers) != 0 and attempt < 2:
         print("-----------------")
         print("attempt number ",attempt)
         print("-----------------")
@@ -67,6 +67,17 @@ def download_etf_prices(years):
     tlist = get_etf_symbols()
     get_price_yahoo(tlist, years)
 
+def download_all_ark_prices(years):
+    DATETIME_FORMAT = '%y%m%d'
+    date_str = datetime.datetime.strftime(datetime.datetime.now(), DATETIME_FORMAT)
+    tlist = get_all_ark_symbol(date_str)
+    #print(tlist)
+    get_price_yahoo(tlist, years)
+
+def download_ark_prices(years):
+    tlist = get_ark_symbols()
+    get_price_yahoo(tlist, years)
+
 def download_sector_prices(sector_name, years):
     tlist = get_sector_symbols(sector_name)
     get_price_yahoo(tlist, years)
@@ -76,8 +87,12 @@ def download_all_prices(years):
     get_price_yahoo(tlist, years)
 
 if __name__ == "__main__":
-    ##download_etf_prices(5)
     ##download_sector_prices("Information Technology",10)
     ##download_sector_prices("Consumer Staples",10)
+    #download_ark_prices(10)
+
     download_all_prices(10)
+    download_etf_prices(10)
+    download_all_ark_prices(10)
+
 
