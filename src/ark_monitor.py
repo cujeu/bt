@@ -25,8 +25,14 @@ pickle_dir = makedir( os.path.join(conf_data_path ,'pickle'))
 DATETIME_FORMAT = '%y%m%d'
 
 def get_csv_write_pickle():
-    #read links.txt into list files 
-    #urls = open('links.txt').read().split('\n')
+    # get the last date of read url
+    latest = None
+    csv_dir_list = os.listdir(csv_dir)
+    csv_dir_list.sort()
+    if len(csv_dir_list) > 0:
+        latest = csv_dir_list[-1]
+        print('csv latest =' + latest)
+
     urls = arklinks
     #read from web and out into csv directory
     for url in urls:
@@ -35,16 +41,14 @@ def get_csv_write_pickle():
         #url is https://xxx, then 'requests' content
         local_file = os.path.join(date_dir, url.split('/')[-1])
         if not os.path.exists(local_file):
-            open(local_file, "wb").write(requests.get(url).content)
+            fark = open(local_file, "wb")
+            fark.write(requests.get(url).content)
+            fark.close()
 
     # make a file list from pickle_dir
     # pickle_dir include '201213' as the latest time to run ark_monitor
     # then do 'pickle' compare from that day
-    latest = None
-    #if len(pickle_dir_list) > 0:
-    csv_dir_list = os.listdir(csv_dir)
-    csv_dir_list.sort()
-    print('csv latest =' + csv_dir_list[-1])
+    """
     pickle_dir_list = os.listdir(pickle_dir)
     pickle_dir_list.sort()
     for pickle_file in pickle_dir_list:
@@ -54,6 +58,7 @@ def get_csv_write_pickle():
             latest = pickle_file
             break
     print('latest is ' + latest)
+    """
 
     #process if need to compare difference pickle files
     for date_dir in os.listdir(csv_dir):
@@ -149,9 +154,11 @@ def out_changes():
                     etf_df.to_pickle(etf_path)
     
     #remove the indicator(i.e.201219) from pickle_dir
+    """
     for file in os.listdir(pickle_dir):
         if len(file.split('.')) < 2:
             os.remove(os.path.join(pickle_dir, file))
+    """
     
     #write the changes into out directory
     for pickle in os.listdir(pickle_dir):
@@ -159,11 +166,13 @@ def out_changes():
             df = pd.read_pickle(os.path.join(pickle_dir, pickle))
             df.to_csv(os.path.join(out_dir, pickle.split('.')[0]+'.csv'))
     
+    """
     #add latest dir_name(i.e.201219)  into pickle_dir as indicator
     csv_date_list = os.listdir(csv_dir)
     csv_date_list.sort()
     indicator = os.path.join(pickle_dir, csv_date_list[-1])
     open(indicator, 'a').close()
+    """
 
 # download csv from https://ark-funds.com/wp-content/fundsiteliterature/csv
 if DOWNLOAD:

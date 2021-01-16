@@ -15,13 +15,14 @@ import pandas as pd
 from config import *
 from sp500_symbols import *
 from inst_ind import *
+        
+mk_view_list = []
+g_newlow_list = []
 
-g_entry_list = []
-g_alert_list = []
 # write strategy
-class scan1_strategy(bt.Strategy):
+class div_ema_scan_strategy(bt.Strategy):
     author = "jun chen"
-    params = (("look_back_days",120),
+    params = (("look_back_days",75),
               ("hold_days",15),
               ("portfolio_size",5))
 
@@ -34,59 +35,47 @@ class scan1_strategy(bt.Strategy):
         # Keep a reference to the "close" line in the data[0] dataseries
         self.bar_num=0
         #self.index_50_date_stock_dict=self.get_index_50_date_stock()
-        self.pool_list = pool_list
         self.dataId_to_ticker_dict = dataId_to_ticker_d
         self.ticker_to_dataId_dict = ticker_to_dataId_d
+        self.position_list = []
+        self.pool_list = pool_list
         self.start_date = start_date
         self.end_date = end_date
-        self.position_list = [] #postion order ["sym", "date", "close", "high", "perc", "exit","edate","eperc"]
+        self.newLowDiv = 100
+        self.newLowIndex = 0
         self.csCount = 0
 
-        self.hasPosition = False
-        self.entryPrice = 100
-        self.highPrice = 100
-        self.newLowDiv = 100
-        self.newLowBar = 0
+        #mk_view_list order [ticker, cs, sm, ml]
+        global mk_view_list
+        mk_view_list = []
+        mk_view_list.append(pool_list[0])
+        for x in range(len(conf_mk_view_col)-1):
+            mk_view_list.append(0)
 
-        global g_entry_list
-        g_entry_list = []
-
-        # add indicators
         for d in self.datas:
             ## d.baseline = btind.ExponentialMovingAverage(d, period=21)
             d.ema20 = btind.ExponentialMovingAverage(d, period=20)
             d.ema60 = btind.ExponentialMovingAverage(d, period=60)
-            d.macd = btind.MACD(d)
             d.priceDiv = PriceDiv(d)
-            d.data_obv = OnBalanceVolume(d)
-            d.data_obv20 = btind.SMA(d.data_obv, period=20)
-            d.data_bb = btind.BollingerBands(d, period=14, devfactor=2.0)
-            d.data_kc = KeltnerChannel(d, periodEMA = 20, periodATR = 20, devfactor=1.5 )
-            d.data_rg = RGChannel(d)
-
             self.log('stategy data init :' + d._name)
 
     def stop(self):
-        if self.hasPosition:
-            stock = self.pool_list[0]
-            data = self.getdatabyname(stock)
-            self.hasPosition = False
-            result_list = self.position_list[-1]
-            del self.position_list[-1]
-                # ["sym", "date", "close", "high", "perc", "exit","edate","eperc"]
-            result_list[3] = str(round(self.highPrice,2))
-            result_list[4] = str(round(100 * (self.highPrice - self.entryPrice) / self.entryPrice, 0))
-            result_list[5] = str(round(data.close[0],2))
-            result_list[6] = str(self.current_date)
-            result_list[7] = str(round(100 * (data.close[0] - self.entryPrice) / self.entryPrice, 0))
-            self.position_list.append(result_list)
+        stock = self.pool_list[0]
+        data = self.getdatabyname(stock)
+        global mk_view_list
+        mk_view_list[conf_chg5_idx] = round(100 * (data.close[0] - data.close[-5]) / (data.close[-5] + 0.01),2)
+        mk_view_list[conf_chg10_idx] = round(100 * (data.close[0] - data.close[-10]) / (data.close[-10] + 0.01),2)
+        mk_view_list[conf_cs0Cnt_idx] = self.csCount
+        mk_view_list[conf_cs_idx] = round(data.priceDiv.cs[0],2)
+        mk_view_list[conf_csChg_idx] = round(data.priceDiv.cs[0] - data.priceDiv.cs[-1], 2)
+        mk_view_list[conf_sm_idx] = round(data.priceDiv.sm[0],2)
+        mk_view_list[conf_ml_idx] = round(data.priceDiv.ml[0],2)
+        mk_view_list[conf_ema20_idx] = round(data.ema20[0],2)
+        mk_view_list[conf_ema20Chg_idx] = round(data.ema20[0] - data.ema20[-2],2)
+        mk_view_list[conf_ema60_idx] = round(data.ema60[0],2)
 
-        global g_entry_list
-        g_entry_list = self.position_list
-        """
         if len(self.position_list) > 0:
             self.log('last div low:' + self.position_list[-1])
-        """
 
     def prenext(self):
         #self.current_date=self.datas[0].datetime.date(0)
@@ -94,108 +83,47 @@ class scan1_strategy(bt.Strategy):
         #pass 
         self.next()
 
-    def test_exit_position(self):
-        result_list=[]
-        if not self.hasPosition:
-            return result_list
-        if len(self.pool_list) > 0:
-            stock = self.pool_list[0]
-            data = self.getdatabyname(stock)
 
-            #no processing of un-aligned data
-            if (data.datetime.date(0) != self.current_date):
-                return result_list;   #continue
-
-            # get the price delta during period of look_back_days
-            if len(data) < self.p.look_back_days :
-                return result_list;  ##continue
-                #self.log('test :' + stock + str(self.divUnder)+ ' ema20=' +str(data.ema20[0]) + ' ema20=' +str(data.ema20[-2]))
-                
-            #if (data.priceDiv.cs[0] < data.priceDiv.sm[0] and 
-            #    data.priceDiv.cs[-1] > data.priceDiv.sm[-1]):
-            if (data.priceDiv.cs[0] < 0 and data.priceDiv.cs[-1] > 0 and \
-                data.priceDiv.cs[0] < data.priceDiv.sm[0]):
-                            
-                self.hasPosition = False
-                result_list = self.position_list[-1]
-                del self.position_list[-1]
-                # ["sym", "date", "close", "high", "perc", "exit","edate","eperc"]
-                result_list[3] = str(round(self.highPrice, 2))
-                result_list[4] = str(round(100 * (self.highPrice - self.entryPrice) / self.entryPrice, 0))
-                result_list[5] = str(round(data.close[0], 2))
-                result_list[6] = str(self.current_date)
-                result_list[7] = str(round(100 * (data.close[0] - self.entryPrice) / self.entryPrice, 0))
-                self.position_list.append(result_list)
-
-        return result_list
-
-
-    def test_entry_position(self):
+    def find_new_div_low(self):
         # get factor
         result_list=[]
-        if self.hasPosition:
-            return result_list
-        if len(self.pool_list) > 0:
-            stock = self.pool_list[0]
+        for stock in self.pool_list:
             data = self.getdatabyname(stock)
 
             #no processing of un-aligned data
             if (data.datetime.date(0) != self.current_date):
-                return result_list;   #continue
+                continue
 
             # get the price delta during period of look_back_days
-            if len(data) < self.p.look_back_days :
-                return result_list;  ##continue
+            if len(data) >= self.p.look_back_days :
                 #self.log('test :' + stock + str(self.divUnder)+ ' ema20=' +str(data.ema20[0]) + ' ema20=' +str(data.ema20[-2]))
                 
-            """
-                COND_1      = if  close > ema_mm and OBV > OBVMA20 then 1 else 0;
-                COND_2      = if cs < 10 and sm < 15 and ml < 20 then 1 else 0;
-                COND_3      = if  RG_ss < 30 and RG_mm < 45 and RG_ll < 60 then 1 else 0;
-                COND_4      = if DEA > 0 and MACD_RATE > MACD_RATE[1] then 1 else 0;
-                COND_5      = SQUEEZE_OFF;
-            """
-            #cond_1 = (data.close[0] > data.ema60[0] and data.close[-1] < data.ema60[-1] and data.data_obv[0] > data.data_obv20[0])
-            #old conservation div condition
-            #cond_div = (data.priceDiv.cs[0] < -7  and
-            #            data.priceDiv.cs[0] > data.priceDiv.cs[-1])
-            
-            cond_div = ((data.priceDiv.cs[0] < -10 or
-                         (data.priceDiv.cs[0] < -5 and 
-                          data.priceDiv.cs[0] > self.newLowDiv and
-                          (self.bar_num - self.newLowBar) > 1))
-                         and data.priceDiv.cs[0] > data.priceDiv.cs[-1])
-            cond_trend = (data.close[0] > data.ema20[0] and data.close[-1] < data.ema20[-1] and \
-                          data.ema20[0] > data.ema60[0] and data.ema60[0] > data.ema60[-1] and \
-                          self.csCount >0)
-
-            cond_1 = (data.close[0] > data.ema60[0] and data.data_obv[0] > data.data_obv20[0])
-            cond_2 = (data.priceDiv.cs[0] > data.priceDiv.cs[-1] and data.priceDiv.cs[0] < 10 and data.priceDiv.sm[0] < 15 and data.priceDiv.cs[0] < data.priceDiv.sm[0])
-            cond_3 = (data.data_rg.shortRG[0] < 30 and data.data_rg.midRG[0] < 45 and data.data_rg.longRG[0] < 60)
-            cond_4 = (data.macd.signal[0] > 0 and data.macd.signal[0] > data.macd.signal[-1])
-            cond_5 = (data.data_bb.bot[0] < data.data_kc.bot[0] and data.data_bb.top[0] > data.data_kc.top[0])
-            if (cond_1 and cond_2 and cond_3 and cond_4 and cond_5) or cond_div:
-                            
-                self.hasPosition = True
-                self.entryPrice = data.close[0]
-                self.highPrice = data.close[0]
-                result_list.append(stock)
-                result_list.append(str(self.current_date))
-                result_list.append(str(round(data.close[0],2)))
-                result_list.append(str(round(data.close[0],2)))  #high
-                result_list.append("0")                         #perc
-                result_list.append(str(round(data.close[0],2)))  #exit
-                result_list.append(str(self.current_date))      #edate
-                result_list.append("0")                         #eperc
-
-                            #self.log('new div low :' + stock + \
-                            #         ' date:' + str(self.current_date) + \
-                            #         ' div:' + str(self.newLowDiv))
+                # entry point: cs back and ema keep up
+                #if data.priceDiv.cs[0] > data.priceDiv.sm[0] and \
+                #   data.priceDiv.cs[-1] <= data.priceDiv.sm[-1] and \
+                if (data.priceDiv.cs[0] > 0):
+                    self.newLowDiv = data.priceDiv.cs[0]
+                else:
+                    if (data.priceDiv.cs[0] > data.priceDiv.cs[-1] and \
+                        data.priceDiv.cs[0] < self.newLowDiv):
+                        ##data.ema60[0] > data.ema60[-1]):
+                            result_list.append(stock)
+                            self.newLowDiv = data.priceDiv.cs[0]
+                            self.newLowIndex = self.bar_num
+                            self.position_list.append(str(self.current_date))
+                            if data.priceDiv.cs[-1] < -5:
+                                if (self.current_date + datetime.timedelta(days=3)) >= self.end_date:
+                                    global g_newlow_list
+                                    g_newlow_list.append([stock, str(self.current_date)])
+                                    self.log('new div low :' + stock + \
+                                             ' date:' + str(self.current_date) + \
+                                             ' div:' + str(self.newLowDiv))
 
         # find new low div
         return result_list
 
     def next(self):
+        # from cash 100，use 10000 for each swap
         self.bar_num += 1
         self.current_date = self.datas[0].datetime.date(0)
         if self.bar_num < self.p.look_back_days :
@@ -209,28 +137,14 @@ class scan1_strategy(bt.Strategy):
                 self.csCount -= 1
         else:
             self.csCount += 1
-        if data.priceDiv.cs[0] < self.newLowDiv :
-            self.newLowDiv = data.priceDiv.cs[0]
-            self.newLowBar = self.bar_num
 
-        if self.hasPosition:
-            if data.close[0] > self.highPrice:
-                self.highPrice = data.close[0]
-            to_watch_list = self.test_exit_position()
-            if len(to_watch_list) > 0 :
-                self.hasPosition = False
-        else:
-            to_watch_list = self.test_entry_position()
+        to_watch_list = self.find_new_div_low()
 
-            if len(to_watch_list) > 0 :
-                self.hasPosition = True
-                self.position_list.append(to_watch_list)
-                #gap = datetime.timedelta(3)   #max(1,(today.weekday() + 6) % 7 - 3))
-                if (self.current_date + datetime.timedelta(days=3)) >= self.end_date:
-                    global g_alert_list
-                    g_alert_list.append([to_watch_list[0],str(self.current_date)])
-                    self.log('recent position:' + to_watch_list[0] + ' '+str(self.current_date))
-
+        #if len(to_watch_list) > 0 :
+        #    if (self.current_date + datetime.timedelta(days=3)) >= self.end_date:
+        #        global g_newlow_list
+        #        g_newlow_list.append([to_watch_list[0], str(self.current_date)])
+        #    self.log('new low div position:' + str(self.current_date))
 
     def notify_order(self, order):
         #Created, Submitted, Accepted, Partial, Completed, \
@@ -273,9 +187,18 @@ def start_scan(ticker_list, start_date, end_date):
     profit_value = 1.0;
     init_cash = 100000.0
     start_tm = datetime.datetime(year=start_date.year, month=start_date.month, day=start_date.day,)
-    
     #mk_df = pd.DataFrame([["a",1, 2, 3]], columns = ["sym", "cs", "sm", "ml"])
-    mk_df = pd.DataFrame(columns = ["sym", "date", "close", "high", "perc", "exit","edate","eperc"])
+    mk_df = pd.DataFrame(columns = conf_mk_view_col)
+    """
+    if 'LSPD' in ticker_list:
+        ticker_list.remove('LSPD')
+    if 'KSPI' in ticker_list:
+        ticker_list.remove('KSPI')
+    if 'ADYEN' in ticker_list:
+        ticker_list.remove('ADYEN')
+    if 'LUMN' in ticker_list:
+        ticker_list.remove('LUMN')
+    """
     for ticker in ticker_list:
     
         # entry point
@@ -296,7 +219,7 @@ def start_scan(ticker_list, start_date, end_date):
             #check row count
             if trading_data_df.shape[0] < 150:
                 len_enough = False
-                break
+                break;
             trading_data_df.drop(['Adj Close'], axis=1, inplace=True)
             trading_data_df.index.names = ['date']
             trading_data_df.rename(columns={'Open' : 'open', 'High' : 'high', 'Low' : 'low',
@@ -307,8 +230,6 @@ def start_scan(ticker_list, start_date, end_date):
             trading_data_df.drop(indexDates , inplace=True)
             trading_data_df['openinterest'] = 0
             #trading_data_df.set_index('Date', inplace=True)
-
-            #__init__ is called at time of feeding data
             data_feed = bt.feeds.PandasData(dataname=trading_data_df,
                                             fromdate=start_date,
                                             todate=end_date)  # dtformat=('%Y-%m-%d'))
@@ -326,31 +247,29 @@ def start_scan(ticker_list, start_date, end_date):
         #cerebro.broker.setcommission(commission=0.0001,stocklike=True)
         cerebro.broker.setcash(init_cash)
 
-        cerebro.addstrategy(scan1_strategy,
+        cerebro.addstrategy(div_ema_scan_strategy,
                             cerebro_ticker_list, dataId_to_ticker_dic, ticker_to_dataId_dic,
                             start_date, end_date)
+                            #end_date.strftime("%Y-%m-%d"))
         #cerebro.addindicator(SchaffTrend)
         #print('Starting Scanning')
-        cerebro.run()
+        results = cerebro.run()
         # cerebro.plot()
         end_time=time.time()
         #print("total running time:{}".format(end_time-begin_time))
         #print('Ending [%s]', ', '.join(map(str,mk_view_list)))
         print('+++')
-        #print('')
         
         #add list to dataframe
-        for e in g_entry_list:
-            # e is list of ["sym", "date", "close", "high", "perc", "exit","edate","eperc"]
-            mk_df.loc[len(mk_df)] = e
+        mk_df.loc[len(mk_df)] = mk_view_list
         #final_value += cerebro.broker.getcash() + cerebro.broker.getvalue - init_cast
         #final_value = final_value + cerebro.broker.getcash() + cerebro.broker.getvalue() - init_cash
         profit_value = profit_value + cerebro.broker.getvalue() - init_cash
 
-    #end of for loop of ticker list
+    #end of for loop
     print(mk_df)
-    print ("       !!!!!!!!!!!    ")
-    print(g_alert_list)
+    print("===================")
+    print(g_newlow_list)
     print ("++++++++++  ")
     return mk_df
 
@@ -399,18 +318,26 @@ def runstrat(args=None):
     shift = datetime.timedelta(max(1,(today.weekday() + 6) % 7 - 3))
     end_date = today - shift + datetime.timedelta(days=1)
     #start_date = datetime.datetime(2015, 1,1)
-    start_date = end_date - datetime.timedelta(days=4*365)
+    start_date = end_date - datetime.timedelta(days=5*365)-datetime.timedelta(days=1)
+
+    #1. watch sp500
+
+    ticker_list = get_all_symbols()
+    mk_df = start_scan(ticker_list, start_date, end_date)
+    filename = conf_data_path + 'allsp500.csv'
+    mk_df.to_csv(filename, encoding='utf8')
     # ticker_list[0] must cover start_date to end_date, as a reference
 
-    ## 1. scan ETF
+    #2. watch ETFs
     ticker_list = get_etf_symbols()
     #ticker_list = ['TECL','FNGU','FNGO','CWEB','TQQQ','ARKW','ARKG','ARKK','QLD' ,'ROM']
+    #ticker_list = ['TECL', 'FNGU','ARKK']
+    #print(ticker_list)
     mk_df = start_scan(ticker_list, start_date, end_date)
-    filename = conf_data_path + 'scan_etf.csv'
+    filename = conf_data_path + 'etf.csv'
     mk_df.to_csv(filename, encoding='utf8')
 
-    ## 2.scan ARK
-    #ticker_list = get_ark_symbols()
+    #3. watch ARK
     DATETIME_FORMAT = '%y%m%d'
     csv_dir = os.path.join(conf_data_path ,'csv')
     csv_list = os.listdir(csv_dir)
@@ -422,22 +349,10 @@ def runstrat(args=None):
 
     ticker_list = get_all_ark_symbol(date_str)
     mk_df = start_scan(ticker_list, start_date, end_date)
-    filename = conf_data_path + 'scan_ark.csv'
+    mk_df = add_ark_diff(mk_df, date_str)
+    filename = conf_data_path + 'ark.csv'
     mk_df.to_csv(filename, encoding='utf8')
-    #with open(filename, 'a') as f:
-    #    mk_df.to_csv(f, header=False)
-    #    f.close
 
-    """
-    ## 3.scan all sp500
-    ticker_list = get_all_symbols()
-    mk_df = start_scan(ticker_list, start_date, end_date)
-    filename = conf_data_path + 'scan_sp500.csv'
-    mk_df.to_csv(filename, encoding='utf8')
-    #with open(filename, 'a') as f:
-    #    mk_df.to_csv(f, header=False)
-    #    f.close
-    """
 
     """
     args = parse_args(args)

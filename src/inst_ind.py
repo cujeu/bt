@@ -1,7 +1,9 @@
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 
+import math
 import datetime
+import pandas as pd
 import backtrader as bt
 import backtrader.feeds as btfeeds
 import backtrader.indicators as btind
@@ -103,7 +105,69 @@ class SchaffTrend(bt.Indicator):
         self.lines.stc = self.p.movav(fastk2, period=self.p.dPeriod)
         #print(len(self.lines.stc))
 
-class NoStrategy(bt.Strategy):
+class OnBalanceVolume(bt.Indicator):
+    lines = ('obv',)
+    params = (('period', 1),)
+    #plotinfo = dict(subplot=False)  # plot in same axis as the data
+    
+    def __init__(self):
+        upday = btind.UpDay(self.data.close)
+        downday = btind.DownDay(self.data.close)
+
+        adup = btind.If(upday, self.data.volume, 0.0)
+        addown = btind.If(downday, 0-self.data.volume, 0.0)
+
+        self.lines.obv = btind.Accum(adup + addown)
+
+        super(OnBalanceVolume, self).__init__()
+
+class KeltnerChannel(bt.Indicator):
+    alias = ('KCBands',)
+    lines = ('top', 'mid', 'bot',)
+    params = (('periodEMA', 20), ('periodATR', 20),('devfactor', 2.0),)
+    plotinfo = dict(subplot=False)
+    plotlines = dict(
+        mid=dict(ls='--'),
+        top=dict(_samecolor=True),
+        bot=dict(_samecolor=True),
+    )
+
+    def __init__(self):
+        #        self.addminperiod(self.p.period)
+        self.lines.mid = bt.indicators.EMA(self.data, period=self.p.periodEMA)
+        atr = bt.indicators.AverageTrueRange(self.data, period=self.p.periodATR)
+        self.lines.top = self.lines.mid + self.p.devfactor * atr
+        self.lines.bot = self.lines.mid - self.p.devfactor * atr
+        super(KeltnerChannel, self).__init__()
+
+class RGChannel(bt.Indicator):
+    alias = ('RGBands',)
+    lines = ('shortRG', 'midRG', 'longRG',)
+    params = (('periodShort', 20), ('periodMid', 60),('periodLong', 120),)
+    plotinfo = dict(subplot=False)
+    plotlines = dict(
+        shortRG=dict(ls='--'),
+        midRG=dict(_samecolor=True),
+        longRG=dict(_samecolor=True),
+    )
+
+    def __init__(self):
+        #        self.addminperiod(self.p.period)
+        h = bt.indicators.Highest(self.data.high, period=self.p.periodShort)
+        l = bt.indicators.Lowest(self.data.low, period=self.p.periodShort)
+        self.lines.shortRG = (h - l) * 100 / l
+        
+        h = bt.indicators.Highest(self.data.high, period=self.p.periodMid)
+        l = bt.indicators.Lowest(self.data.low, period=self.p.periodMid)
+        self.lines.midRG = (h - l) * 100 / l
+        
+        h = bt.indicators.Highest(self.data.high, period=self.p.periodLong)
+        l = bt.indicators.Lowest(self.data.low, period=self.p.periodLong)
+        self.lines.longRG = (h - l) * 100 / l
+        
+        super(RGChannel, self).__init__()
+
+class NoStrategy_with_stc(bt.Strategy):
     params = (('trixperiod', 15),)
 
     def __init__(self):
@@ -127,31 +191,107 @@ class NoStrategy(bt.Strategy):
         #print(self.bar_num, len(self.data_schaff.lines[0]),
         #      self.data_schaff.lines[0].array[idx], self.data_schaff.lines[0].array[idx-1])
         
+class NoStrategy_with_obv(bt.Strategy):
+    params = (('trixperiod', 15),)
+
+    def __init__(self):
+        self.bar_num = 0
+        #MyTrix(self.data, period=self.p.trixperiod)
+        #self.data_priceDiv = PriceDiv(self.data)
+        self.data_obv = OnBalanceVolume(self.data)  ##
+        ##btind.obv(self.data,period=3, plot=True)
+        self.data_obv20 = btind.SMA(self.data_obv, period=20)
+
+
+    def next(self):
+        self.bar_num += 1
+        if self.bar_num < 50 :
+            return
+        #print("div ",self.data_priceDiv.cs[0],
+        print(self.data.close[0],
+              "obv ",self.data_obv[0],
+              "obv20 ",self.data_obv20[0])
+
+class NoStrategy(bt.Strategy):
+
+    def __init__(self):
+        self.bar_num = 0
+        self.data_rg = RGChannel(self.data)
+        #self.data_bb = btind.BollingerBands(self.data, period=14, devfactor=4)
+        #self.data_bb = KeltnerChannel(self.data)
+
+
+    def next(self):
+        self.bar_num += 1
+        if self.bar_num < 50 :
+            return
+        #print("div ",self.data_priceDiv.cs[0],
+        print(self.data.close[0],
+              "top ",self.data_rg.shortRG[0],
+              "mid ",self.data_rg.midRG[0],
+              "bot ",self.data_rg.longRG[0])
+        """
+        print(self.data.close[0],
+              "top ",self.data_bb.top[0],
+              "mid ",self.data_bb.mid[0],
+              "bot ",self.data_bb.bot[0])
+        """
+
+
 
 if __name__ == '__main__':
-    today = datetime.datetime.today().date()
-    shift = datetime.timedelta(max(1,(today.weekday() + 6) % 7 - 3))
-    end_date = today - shift + datetime.timedelta(days=1)
-    start_date = end_date - datetime.timedelta(days=5*365)-datetime.timedelta(days=1)
-    #start_date = end_date - datetime.timedelta(weeks=4)-datetime.timedelta(days=1)
-    print(today, shift, end_date, start_date)
-
-    # Create a cerebro entity
-    cerebro = bt.Cerebro()
-
-    # Add a strategy
-    cerebro.addstrategy(NoStrategy, trixperiod=15)
-
-    # Create a Data Feed
-    #datapath = ('/home/jun/proj/backtrader/datas/2006-day-001.txt')
-    datapath = ('SPY20.csv')
-    data = bt.feeds.BacktraderCSVData(dataname=datapath)
-
-    # Add the Data Feed to Cerebro
-    cerebro.adddata(data)
-
-    # Run over everything
-    cerebro.run()
-
-    # Plot the result
-    cerebro.plot()
+    run_test = False
+    if run_test:
+        today = datetime.datetime.today().date()
+        shift = datetime.timedelta(max(1,(today.weekday() + 6) % 7 - 3))
+        end_date = today - shift + datetime.timedelta(days=1)
+        start_date = end_date - datetime.timedelta(days=2*365)-datetime.timedelta(days=1)
+        #start_date = end_date - datetime.timedelta(weeks=4)-datetime.timedelta(days=1)
+        print(today, shift, end_date, start_date)
+    
+        # Create a cerebro entity
+        cerebro = bt.Cerebro()
+    
+        # Add a strategy
+        cerebro.addstrategy(NoStrategy)
+    
+        # Create a Data Feed
+        #datapath = ('/home/jun/proj/backtrader/datas/2006-day-001.txt')
+        datapath = ('SPY20.csv')
+        trading_data_df = pd.read_csv(datapath, index_col=0, parse_dates=True)
+        trading_data_df.drop(['Adj Close'], axis=1, inplace=True)
+        trading_data_df.index.names = ['date']
+        trading_data_df.rename(columns={'Open' : 'open', 'High' : 'high', 'Low' : 'low',
+                                        'Close' : 'close', 'Volume' : 'volume'}, inplace=True)
+        ## set data range by date
+        # Delete these row indexes from dataFrame
+        ##indexDates = trading_data_df[trading_data_df.index < start_date].index
+        ##        trading_data_df.drop(indexDates , inplace=True)
+        trading_data_df['openinterest'] = 0
+        data_feed = bt.feeds.PandasData(dataname=trading_data_df)
+                                                #fromdate = datetime.datetime(2010, 1, 4),
+                                                #todate = datetime.datetime(2019, 12, 31))
+                                                #fromdate=start_date,
+                                                #todate=end_date)  # dtformat=('%Y-%m-%d'))
+        
+        """
+        data = bt.feeds.BacktraderCSVData(dataname=datapath,
+                                            datetime=0,
+                                            high=1,
+                                            low=2,
+                                            open=3,
+                                            close=4,
+                                            adjclose=5,
+                                            volume=6,
+                                            openinterest=-1)
+        """
+    
+        # Add the Data Feed to Cerebro
+        cerebro.adddata(data_feed)
+    
+        # Run over everything
+        cerebro.run()
+        print(today, shift, end_date, start_date)
+    
+        # Plot the result
+        cerebro.plot()

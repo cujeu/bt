@@ -118,7 +118,7 @@ def get_ark_diff(date_picked):
         extension = os.path.splitext(out_file_path)[1]
         if extension != ".csv":
             continue
-        print(out_file_path)
+        #print(out_file_path)
         #read into df
         if len(out_df) > 0:
             tmp_df = pd.read_csv(out_file_path)
@@ -200,7 +200,7 @@ def get_etf_symbols():
                 'ONLN','QCLN','IBUY','FDNI','PBW',
                 'ESPO','ARKQ','ARKF','UBOT','OGIG',
                 'ACES','TAN' ,'EMQQ','CNRG','SMOG',
-                'XLE', 'LIT', 'SKYY']
+                'XLE', 'LIT', 'SKYY','DXY']
     etf_list.sort()
     return etf_list
 
