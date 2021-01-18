@@ -81,6 +81,78 @@ class PriceDiv(bt.Indicator):
         self.lines.sm = ((ema20 - ema60) / ema60) * 100.0
         self.lines.ml = ((ema60 - ema120) / ema120) * 100.0
 
+class RelativeMovingAverage(bt.Indicator):
+    '''
+    A Moving Average that smoothes data exponentially over time.
+
+    It is a subclass of SmoothingMovingAverage.
+
+      - self.smfactor -> 1 / (1 + period)
+      - self.smfactor1 -> `1 - self.smfactor`
+
+    Formula:
+      - movav = prev * (1.0 - smoothfactor) + newdata * smoothfactor
+
+    See also:
+      - http://en.wikipedia.org/wiki/Moving_average#Exponential_moving_average
+    '''
+    alias = ('RMA', )
+    lines = ('rma',)
+    params = (('period', 10),)
+
+    def __init__(self):
+        # Before super to ensure mixins (right-hand side in subclassing)
+        # can see the assignment operation and operate on the line
+        self.lines[0] = es = bt.indicators.ExponentialSmoothing(
+            self.data,
+            period=self.p.period,
+            alpha=1.0 / (1.0 + self.p.period))
+
+        self.alpha, self.alpha1 = es.alpha, es.alpha1
+
+        super(RelativeMovingAverage, self).__init__()
+
+class AtrTrend(bt.Indicator):
+    lines = ('up', 'dn',)
+    params = (('ATRPeriod', 10),
+              ('Multiplier', 3.0),)
+
+    def __init__(self):
+
+        hl2 = (self.data.high + self.data.low) / 2
+        #ttr = bt.indicators.TrueRange(self.data)
+        #ttr = bt.Max(self.data.high- self.data.low, 
+        #             bt.Max(abs(self.data.high(0) - self.data.close(-1)),
+        #                    abs(self.data.low(0) - self.data.close(-1))))
+
+        #atr2 = RelativeMovingAverage(ttr, period=self.p.ATRPeriod)
+        #atr30 = bt.ind.SMA(ttr, period=30)
+        #atr20 = bt.ind.SMA(ttr, period=20)
+        #atr2 = atr30 - atr20 + bt.ind.SMA(ttr, period=self.p.ATRPeriod)
+        #atr2 = bt.ind.EMA(ttr, period=self.p.ATRPeriod)
+        atr2 = bt.indicators.AverageTrueRange(self.data, period=self.p.ATRPeriod)
+        self.lines.up = hl2 - (self.p.Multiplier * atr2)
+        #self.lines.up = btind.If(self.data.close(-1) > upSrc(-1),
+        #                         bt.Max(upSrc,upSrc(-1)) , upSrc)
+
+        self.lines.dn = hl2 + (2.0 * atr2)
+        #self.lines.dn = btind.If(self.data.close(-1) < dnSrc(-1),
+        #                         bt.Min(dnSrc, dnSrc(-1)) , dnSrc)
+
+        """
+        trd = self.data.close - self.data.close + 1
+        trd2 = btind.If(trd(-1) < 0,
+                        btind.If(self.data.close > dn,1,trd2(-1)),
+                        btind.If(self.data.close < up, -1, trd2(-1)))
+        #trd2 = btind.If((trd(-1) < 0) and (self.data.close(0) > dn(0)),
+        #1, btind.If(trd(-1) > 0 and self.data.close(0) < up(0), -1, 0))
+
+        self.lines.trend = trd2
+        #btind.If((trd(-1) < 0) and (self.data.close > dn),
+        #               1,  btind.If(trd(-1) > 0 and self.data.close < up, -1, 0))
+        """
+        super(AtrTrend, self).__init__()
+
 class SchaffTrend(bt.Indicator):
     lines = ('stc',)
     params = (
@@ -212,7 +284,7 @@ class NoStrategy_with_obv(bt.Strategy):
               "obv ",self.data_obv[0],
               "obv20 ",self.data_obv20[0])
 
-class NoStrategy(bt.Strategy):
+class NoStrategy_with_band(bt.Strategy):
 
     def __init__(self):
         self.bar_num = 0
@@ -237,6 +309,43 @@ class NoStrategy(bt.Strategy):
               "bot ",self.data_bb.bot[0])
         """
 
+class NoStrategy(bt.Strategy):
+
+    def __init__(self):
+        self.bar_num = 0
+        #ttr = bt.indicators.TrueRange(self.data)
+        #self.data_atr = RelativeMovingAverage(bt.indicators.TrueRange(self.data), period=10)
+        #atr3 = btind.AverageTrueRange(self.data, period=30)
+        #atr2 = btind.AverageTrueRange(self.data, period=20)
+        #atr1 = btind.AverageTrueRange(self.data, period=10)
+        #self.data_atr = atr3 - atr2 + atr1
+        
+        #ttr = bt.Max(self.data.high- self.data.low, 
+        #             bt.Max(abs(self.data.high(0) - self.data.close(-1)),
+        #                    abs(self.data.low(0) - self.data.close(-1))))
+        #self.data_atr = RelativeMovingAverage(ttr, period=10)
+
+        self.data_atr = btind.AverageTrueRange(self.data, period=10)
+        self.data_trend = AtrTrend(self.data)
+        self.trend = -1
+
+    def next(self):
+        self.bar_num += 1
+        if self.bar_num < 50 :
+            return
+        #trend := trend == -1 and close > dn1 ? 1 : trend == 1 and close < up1 ? -1 : trend
+        mindn = min(self.data_trend.dn[-5], min(self.data_trend.dn[-3], self.data_trend.dn[-2]))
+        maxup = max(self.data_trend.up[-5], max(self.data_trend.up[-3], self.data_trend.up[-2]))
+
+        if (self.trend > 0 and self.data.close[0] < maxup): #self.data_trend.up[-2]) :
+            self.trend = -1
+        elif (self.trend < 0 and self.data.close[0] > mindn ):  #self.data_trend.dn[-2]):
+            self.trend = 1
+        #print("div ",self.data_priceDiv.cs[0],
+        print(str(self.datetime.date(ago=0)), 
+              self.data.close[0],
+              (self.data.high[0] + self.data.low[0])/2,
+              "trend ", self.trend, self.data_atr[0], self.data_trend.up[0], self.data_trend.dn[0])
 
 
 if __name__ == '__main__':

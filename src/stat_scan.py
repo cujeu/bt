@@ -29,9 +29,9 @@ def run_stat(target_csv):
     #view #2: use bins
     #mk_df.plot.hist(bins=10, column='perc') #alpha=0.5)
 
-    step = 5
+    step = 10
     #bin_range = np.arange(0, 100+step, step)
-    bin_range = np.arange(0, 200, step)
+    bin_range = np.arange(0, 500, step)
     out, bins  = pd.cut(mk_df['perc'], bins=bin_range, include_lowest=True, right=False, retbins=True)
     out.value_counts(sort=False).plot.bar()
     # verify in libreoffice: =COUNTIF(F1:F411, "<"&L2) - COUNTIF(F1:F411, "<"&K2)
