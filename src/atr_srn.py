@@ -39,7 +39,7 @@ class atr_scrn_strategy(bt.Strategy):
         self.ticker_to_dataId_dict = ticker_to_dataId_d
         self.start_date = start_date
         self.end_date = end_date
-        self.position_list = [] #postion order ["sym", "date", "close", "high", "perc", "exit","edate","eperc"]
+        self.position_list = [] #postion order ["sym", "date", "close", "high", "perc", "exit","edate","eperc","strategy"]
         self.csCount = 0
 
         self.hasPosition = False
@@ -48,8 +48,7 @@ class atr_scrn_strategy(bt.Strategy):
         self.newLowDiv = 100
         self.newLowBar = 0
         self.atrTrend = False
-        self.cond_div = False
-        self.cond_atr = False
+        self.curStrategy = 0 #1:divergence #2:atr
 
         global g_entry_list
         g_entry_list = []
@@ -77,12 +76,13 @@ class atr_scrn_strategy(bt.Strategy):
             self.hasPosition = False
             result_list = self.position_list[-1]
             del self.position_list[-1]
-                # ["sym", "date", "close", "high", "perc", "exit","edate","eperc"]
+                # ["sym", "date", "close", "high", "perc", "exit","edate","eperc","strategy"]
             result_list[3] = str(round(self.highPrice,2))
             result_list[4] = str(round(100 * (self.highPrice - self.entryPrice) / self.entryPrice, 0))
             result_list[5] = str(round(data.close[0],2))
             result_list[6] = str(self.current_date)
             result_list[7] = str(round(100 * (data.close[0] - self.entryPrice) / self.entryPrice, 0))
+            result_list[8] = str(self.curStrategy)
             self.position_list.append(result_list)
 
         global g_entry_list
@@ -118,32 +118,39 @@ class atr_scrn_strategy(bt.Strategy):
             #if (data.priceDiv.cs[0] < data.priceDiv.sm[0] and 
             #    data.priceDiv.cs[-1] > data.priceDiv.sm[-1]):
             
-            if self.cond_div:
-                if (data.priceDiv.cs[0] < 0 and data.priceDiv.cs[-1] > 0 and \
-                    data.priceDiv.cs[0] < data.priceDiv.sm[0]):
-                    self.cond_div = False
+            if (self.curStrategy == 1) and \
+               (data.priceDiv.cs[0] < 0 and data.priceDiv.cs[-1] > 0 and \
+                data.priceDiv.cs[0] < data.priceDiv.sm[0]) :
+
+                #transfer the strategy
+                if self.atrTrend:
+                    self.curStrategy = 2
+                else:
                     self.hasPosition = False
                     result_list = self.position_list[-1]
                     del self.position_list[-1]
-                    # ["sym", "date", "close", "high", "perc", "exit","edate","eperc"]
+                    # ["sym", "date", "close", "high", "perc", "exit","edate","eperc","strategy"]
                     result_list[3] = str(round(self.highPrice, 2))
                     result_list[4] = str(round(100 * (self.highPrice - self.entryPrice) / self.entryPrice, 0))
                     result_list[5] = str(round(data.close[0], 2))
                     result_list[6] = str(self.current_date)
                     result_list[7] = str(round(100 * (data.close[0] - self.entryPrice) / self.entryPrice, 0))
+                    result_list[8] = str(self.curStrategy)
                     self.position_list.append(result_list)
+                    self.curStrategy = 0
 
-            elif not self.atrTrend and self.cond_atr:
-                self.cond_atr = False
+            elif (self.curStrategy == 2) and (not self.atrTrend):
                 self.hasPosition = False
                 result_list = self.position_list[-1]
                 del self.position_list[-1]
-                # ["sym", "date", "close", "high", "perc", "exit","edate","eperc"]
+                # ["sym", "date", "close", "high", "perc", "exit","edate","eperc","strategy"]
                 result_list[3] = str(round(self.highPrice, 2))
                 result_list[4] = str(round(100 * (self.highPrice - self.entryPrice) / self.entryPrice, 0))
                 result_list[5] = str(round(data.close[0], 2))
                 result_list[6] = str(self.current_date)
                 result_list[7] = str(round(100 * (data.close[0] - self.entryPrice) / self.entryPrice, 0))
+                result_list[8] = str(self.curStrategy)
+                self.curStrategy = 0
                 self.position_list.append(result_list)
 
         return result_list
@@ -167,53 +174,37 @@ class atr_scrn_strategy(bt.Strategy):
                 return result_list;  ##continue
                 #self.log('test :' + stock + str(self.divUnder)+ ' ema20=' +str(data.ema20[0]) + ' ema20=' +str(data.ema20[-2]))
                 
-            """
-                COND_1      = if  close > ema_mm and OBV > OBVMA20 then 1 else 0;
-                COND_2      = if cs < 10 and sm < 15 and ml < 20 then 1 else 0;
-                COND_3      = if  RG_ss < 30 and RG_mm < 45 and RG_ll < 60 then 1 else 0;
-                COND_4      = if DEA > 0 and MACD_RATE > MACD_RATE[1] then 1 else 0;
-                COND_5      = SQUEEZE_OFF;
-            """
-            #cond_1 = (data.close[0] > data.ema60[0] and data.close[-1] < data.ema60[-1] and data.data_obv[0] > data.data_obv20[0])
-            #old conservation div condition
-            #cond_div = (data.priceDiv.cs[0] < -7  and
-            #            data.priceDiv.cs[0] > data.priceDiv.cs[-1])
-            
-            if not self.cond_div:
-                self.cond_div = ((data.priceDiv.cs[0] < -10 or
-                                 (data.priceDiv.cs[0] < -5 and 
-                                  data.priceDiv.cs[0] > self.newLowDiv and
-                                  (self.bar_num - self.newLowBar) > 1)) and
-                                 data.priceDiv.cs[0] > data.priceDiv.cs[-1])
+            cond_atr = False
+            cond_div = False
+            if self.curStrategy == 0:
+                cond_atr = self.atrTrend
+                cond_div = ((data.priceDiv.cs[0] < -10 or
+                            (data.priceDiv.cs[0] < -5 and 
+                             data.priceDiv.cs[0] > self.newLowDiv and
+                             (self.bar_num - self.newLowBar) > 1)) and
+                            data.priceDiv.cs[0] > data.priceDiv.cs[-1])
 
-            if not self.cond_atr:
-                self.cond_atr = self.atrTrend
-
-            """
-            cond_1 = (data.close[0] > data.ema60[0] and data.data_obv[0] > data.data_obv20[0])
-            cond_2 = (data.priceDiv.cs[0] > data.priceDiv.cs[-1] and data.priceDiv.cs[0] < 10 and data.priceDiv.sm[0] < 15 and data.priceDiv.cs[0] < data.priceDiv.sm[0])
-            cond_3 = (data.data_rg.shortRG[0] < 30 and data.data_rg.midRG[0] < 45 and data.data_rg.longRG[0] < 60)
-            cond_4 = (data.macd.signal[0] > 0 and data.macd.signal[0] > data.macd.signal[-1])
-            cond_5 = (data.data_bb.bot[0] < data.data_kc.bot[0] and data.data_bb.top[0] > data.data_kc.top[0])
-            if (cond_1 and cond_2 and cond_3 and cond_4 and cond_5) or cond_div:
-            """
             #if (cond_atr and (data.priceDiv.cs[0] > data.priceDiv.sm[0] and
             #                 data.priceDiv.cs[0] < data.priceDiv.ml[0] and
             #                 data.priceDiv.sm[0] > data.priceDiv.sm[-1])) or 
 
-            if self.cond_atr or self.cond_div :
-                            
-                self.hasPosition = True
-                self.entryPrice = data.close[0]
-                self.highPrice = data.close[0]
-                result_list.append(stock)
-                result_list.append(str(self.current_date))
-                result_list.append(str(round(data.close[0],2)))
-                result_list.append(str(round(data.close[0],2))) #high
-                result_list.append("0")                         #perc
-                result_list.append(str(round(data.close[0],2))) #exit
-                result_list.append(str(self.current_date))      #edate
-                result_list.append("0")                         #eperc
+                if cond_atr or cond_div :
+                    if cond_div:
+                        self.curStrategy = 1
+                    else:
+                        self.curStrategy = 2
+                    self.hasPosition = True
+                    self.entryPrice = data.close[0]
+                    self.highPrice = data.close[0]
+                    result_list.append(stock)
+                    result_list.append(str(self.current_date))
+                    result_list.append(str(round(data.close[0],2)))
+                    result_list.append(str(round(data.close[0],2))) #high
+                    result_list.append("0")                         #perc
+                    result_list.append(str(round(data.close[0],2))) #exit
+                    result_list.append(str(self.current_date))      #edate
+                    result_list.append("0")                         #eperc
+                    result_list.append(str(self.curStrategy))       #strategy
 
                             #self.log('new div low :' + stock + \
                             #         ' date:' + str(self.current_date) + \
@@ -240,8 +231,8 @@ class atr_scrn_strategy(bt.Strategy):
             self.newLowDiv = data.priceDiv.cs[0]
             self.newLowBar = self.bar_num
 
-        mindn = min(self.data.data_atr.dn[-5], min(self.data.data_atr.dn[-3], self.data.data_atr.dn[-2]))
-        maxup = max(self.data.data_atr.up[-5], max(self.data.data_atr.up[-3], self.data.data_atr.up[-2]))
+        mindn = min(self.data.data_atr.dn[-5], min(self.data.data_atr.dn[-6], self.data.data_atr.dn[-2]))
+        maxup = max(self.data.data_atr.up[-5], max(self.data.data_atr.up[-6], self.data.data_atr.up[-2]))
         if (self.atrTrend and self.data.close[0] < maxup): #data.data_atr.up[-1]) :
             self.atrTrend = False
         elif (self.atrTrend==False and self.data.close[0] > mindn): #data.data_atr.dn[-1]):
@@ -263,8 +254,8 @@ class atr_scrn_strategy(bt.Strategy):
                 #gap = datetime.timedelta(3)   #max(1,(today.weekday() + 6) % 7 - 3))
                 if (self.current_date + datetime.timedelta(days=3)) >= self.end_date:
                     global g_alert_list
-                    g_alert_list.append([to_watch_list[0],str(self.current_date)])
-                    self.log('recent position:' + to_watch_list[0] + ' '+str(self.current_date))
+                    g_alert_list.append([to_watch_list[0],str(self.curStrategy),str(self.current_date)])
+                    self.log('recent position:' + to_watch_list[0] + ' '+str(self.curStrategy)+ ' '+str(self.current_date))
 
 
     def notify_order(self, order):
@@ -310,7 +301,7 @@ def start_scan(ticker_list, start_date, end_date):
     start_tm = datetime.datetime(year=start_date.year, month=start_date.month, day=start_date.day,)
     
     #mk_df = pd.DataFrame([["a",1, 2, 3]], columns = ["sym", "cs", "sm", "ml"])
-    mk_df = pd.DataFrame(columns = ["sym", "date", "close", "high", "perc", "exit","edate","eperc"])
+    mk_df = pd.DataFrame(columns = ["sym", "date", "close", "high", "perc", "exit","edate","eperc","strategy"])
     for ticker in ticker_list:
     
         # entry point
@@ -376,7 +367,7 @@ def start_scan(ticker_list, start_date, end_date):
         
         #add list to dataframe
         for e in g_entry_list:
-            # e is list of ["sym", "date", "close", "high", "perc", "exit","edate","eperc"]
+            # e is list of ["sym", "date", "close", "high", "perc", "exit","edate","eperc","strategy"]
             mk_df.loc[len(mk_df)] = e
         #final_value += cerebro.broker.getcash() + cerebro.broker.getvalue - init_cast
         #final_value = final_value + cerebro.broker.getcash() + cerebro.broker.getvalue() - init_cash

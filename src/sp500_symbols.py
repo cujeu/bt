@@ -200,7 +200,7 @@ def get_etf_symbols():
                 'ONLN','QCLN','IBUY','FDNI','PBW',
                 'ESPO','ARKQ','ARKF','UBOT','OGIG',
                 'ACES','TAN' ,'EMQQ','CNRG','SMOG',
-                'XLE', 'LIT', 'SKYY','DXY']
+                'XLE', 'LIT', 'SKYY','BOTZ','HAIL']
     etf_list.sort()
     return etf_list
 

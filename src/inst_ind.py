@@ -131,14 +131,16 @@ class AtrTrend(bt.Indicator):
         #atr2 = atr30 - atr20 + bt.ind.SMA(ttr, period=self.p.ATRPeriod)
         #atr2 = bt.ind.EMA(ttr, period=self.p.ATRPeriod)
         atr2 = bt.indicators.AverageTrueRange(self.data, period=self.p.ATRPeriod)
-        self.lines.up = hl2 - (self.p.Multiplier * atr2)
-        #self.lines.up = btind.If(self.data.close(-1) > upSrc(-1),
-        #                         bt.Max(upSrc,upSrc(-1)) , upSrc)
-
-        self.lines.dn = hl2 + (2.0 * atr2)
-        #self.lines.dn = btind.If(self.data.close(-1) < dnSrc(-1),
-        #                         bt.Min(dnSrc, dnSrc(-1)) , dnSrc)
-
+        upSrc = hl2 - (self.p.Multiplier * atr2)
+        #up := close[1] > up1 ? max(up,up1) : up
+        self.lines.up = btind.If(self.data.close(-1) > upSrc(-1),
+                                 bt.Max(upSrc,upSrc(-1)) , upSrc)
+        
+        dnSrc = hl2 + (self.p.Multiplier * atr2)
+        #dn := close[1] < dn1 ? min(dn, dn1) : dn
+        self.lines.dn = btind.If(self.data.close(-1) < dnSrc(-1),
+                                 bt.Min(dnSrc, dnSrc(-1)) , dnSrc)
+        
         """
         trd = self.data.close - self.data.close + 1
         trd2 = btind.If(trd(-1) < 0,
@@ -334,9 +336,11 @@ class NoStrategy(bt.Strategy):
         if self.bar_num < 50 :
             return
         #trend := trend == -1 and close > dn1 ? 1 : trend == 1 and close < up1 ? -1 : trend
-        mindn = min(self.data_trend.dn[-5], min(self.data_trend.dn[-3], self.data_trend.dn[-2]))
-        maxup = max(self.data_trend.up[-5], max(self.data_trend.up[-3], self.data_trend.up[-2]))
+        mindn = min(self.data_trend.dn[-5], min(self.data_trend.dn[-6], self.data_trend.dn[-2]))
+        maxup = max(self.data_trend.up[-5], max(self.data_trend.up[-6], self.data_trend.up[-2]))
 
+        #maxup = self.data_trend.up[-1]
+        #mindn = self.data_trend.dn[-1]
         if (self.trend > 0 and self.data.close[0] < maxup): #self.data_trend.up[-2]) :
             self.trend = -1
         elif (self.trend < 0 and self.data.close[0] > mindn ):  #self.data_trend.dn[-2]):

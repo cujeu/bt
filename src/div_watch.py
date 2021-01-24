@@ -320,13 +320,15 @@ def runstrat(args=None):
     #start_date = datetime.datetime(2015, 1,1)
     start_date = end_date - datetime.timedelta(days=5*365)-datetime.timedelta(days=1)
 
+    """
     #1. watch sp500
 
     ticker_list = get_all_symbols()
     mk_df = start_scan(ticker_list, start_date, end_date)
-    filename = conf_data_path + 'allsp500.csv'
+    filename = conf_data_path + 'div_sp500.csv'
     mk_df.to_csv(filename, encoding='utf8')
     # ticker_list[0] must cover start_date to end_date, as a reference
+    """
 
     #2. watch ETFs
     ticker_list = get_etf_symbols()
@@ -334,7 +336,7 @@ def runstrat(args=None):
     #ticker_list = ['TECL', 'FNGU','ARKK']
     #print(ticker_list)
     mk_df = start_scan(ticker_list, start_date, end_date)
-    filename = conf_data_path + 'etf.csv'
+    filename = conf_data_path + 'div_etf.csv'
     mk_df.to_csv(filename, encoding='utf8')
 
     #3. watch ARK
@@ -350,7 +352,7 @@ def runstrat(args=None):
     ticker_list = get_all_ark_symbol(date_str)
     mk_df = start_scan(ticker_list, start_date, end_date)
     mk_df = add_ark_diff(mk_df, date_str)
-    filename = conf_data_path + 'ark.csv'
+    filename = conf_data_path + 'div_ark.csv'
     mk_df.to_csv(filename, encoding='utf8')
 
 
