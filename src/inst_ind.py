@@ -81,6 +81,12 @@ class PriceDiv(bt.Indicator):
         self.lines.sm = ((ema20 - ema60) / ema60) * 100.0
         self.lines.ml = ((ema60 - ema120) / ema120) * 100.0
 
+        """ another squeeze indicator from trading view
+        pairSQ(ma1,ma2,len) =>
+            d = abs(ma1-ma2)
+            change = (1-(d[0] / (d[0]+d[len])))*100
+        """
+
 class RelativeMovingAverage(bt.Indicator):
     '''
     A Moving Average that smoothes data exponentially over time.

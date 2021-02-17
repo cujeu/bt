@@ -117,10 +117,12 @@ def output_changes(date_dir):
                     etf_df = pd.concat([etf_df, tmp_df])
                     etf_df.to_pickle(etf_path)
     
+    """
     #remove the indicator(i.e.201219) from pickle_dir
     for oldfile in os.listdir(pickle_dir):
         if len(oldfile.split('.')) < 2:
             os.remove(os.path.join(pickle_dir, oldfile))
+    """
     
     #write the changes into out directory
     for pickle in os.listdir(pickle_dir):
@@ -128,9 +130,11 @@ def output_changes(date_dir):
             df = pd.read_pickle(os.path.join(pickle_dir, pickle))
             df.to_csv(os.path.join(out_dir, pickle.split('.')[0]+'.csv'))
     
+    """
     #add latest dir_name(i.e.201219)  into pickle_dir as indicator
     indicator = os.path.join(pickle_dir, date_dir)
     open(indicator, 'a').close()
+    """
 
 csv_list = os.listdir(csv_dir)
 csv_list.sort()

@@ -202,7 +202,7 @@ def start_scan(ticker_list, start_date, end_date):
     for ticker in ticker_list:
     
         # entry point
-        begin_time=time.time()
+        # begin_time=time.time()
         cerebro = bt.Cerebro()
         dataId_to_ticker_dic = {}
         ticker_to_dataId_dic = {}
@@ -239,6 +239,14 @@ def start_scan(ticker_list, start_date, end_date):
             idx += 1
         
         if not len_enough:
+            ## add empty
+            global mk_view_list
+            mk_view_list = []
+            mk_view_list.append(tk)
+            for x in range(len(conf_mk_view_col)-1):
+                mk_view_list.append(0)
+            mk_df.loc[len(mk_df)] = mk_view_list
+            print('new stock ' + tk)
             continue
         
         cerebro.broker = bt.brokers.BackBroker(shortcash=True)  # 0.5%
@@ -351,6 +359,7 @@ def runstrat(args=None):
 
     ticker_list = get_all_ark_symbol(date_str)
     mk_df = start_scan(ticker_list, start_date, end_date)
+    # diff column is latest day position change
     mk_df = add_ark_diff(mk_df, date_str)
     filename = conf_data_path + 'div_ark.csv'
     mk_df.to_csv(filename, encoding='utf8')

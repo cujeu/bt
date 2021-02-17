@@ -74,26 +74,51 @@ def read_csv_df():
     df_data = pd.read_csv(file_name)
     return df_data
 
-#ark_df is formated df in scnner, now add the changes as new column
+#ark_df is formated df in scaner, now add the changes as new column
 def add_ark_diff(ark_df, date_str):
-    if date_str == None:
-        csv_dir = os.path.join(conf_data_path ,'csv')
-        date_list = os.listdir(csv_dir)
-        date_list.sort()
-        date_str = date_list[-1]
-    diff_col = 'diff'
-    ark_df[diff_col] = 0
-    diff_df = get_ark_diff(date_str)
+    date_list = []
+    ## if date_str == None:
+    csv_dir = os.path.join(conf_data_path ,'csv')
+    date_list = os.listdir(csv_dir)
+    date_list.sort()
     ark_list = ark_df['sym'].tolist()
 
-    for index, row in diff_df.iterrows():
+    """
+    add columns below
+    sym     diff1	diff2	diff3	diff4	diff5   mom
+    aapl    28199	95682	35595	36697	22841   5/6
+    accd    25389	37107	52731	82026	13671   5/6
+    """
+    for x in range(1,6):
+        date_str = date_list[0 - x]
+        diff_col = 'diff'+str(x)
+        ark_df[diff_col] = 0
 
-        tk = row['ticker']
-        diff = row[diff_col]
-        if tk in ark_list:
-            ark_df.loc[(ark_df.sym == tk),diff_col]=diff
-            
-            #ark_df.at[tk, diff_col] = diff
+        diff_df = get_ark_diff(date_str)
+
+        for index, row in diff_df.iterrows():
+            #column ate,ticker,diff,diff2marketcap
+            tk = row['ticker']
+            diff = row['diff']
+            if tk in ark_list:
+                ark_df.loc[(ark_df.sym == tk),diff_col] = diff
+                #ark_df.at[tk, diff_col] = diff
+
+    pos_rate_col = 'pos'
+    ark_df[pos_rate_col] = 0
+    for index, row in ark_df.iterrows():
+        pos_rate = 0
+        tk = row['sym']
+        for x in range(1,6):
+            diff_col = 'diff'+str(x)
+            if row[diff_col] > 0:
+                pos_rate += 1
+        
+        #count momentu buying power
+        r = 0
+        if pos_rate > 0:
+            r = int(100 * pos_rate / 5)
+        ark_df.loc[(ark_df.sym == tk),pos_rate_col] = r
 
     return ark_df
 
@@ -102,7 +127,8 @@ def get_ark_diff(date_picked):
     merge all changes into one df on specified date
     ,date,ticker,diff,diff2marketcap
     0,2020-12-15,TSLA,-281.0,-0.0001768281186816051
-    0,2020-12-15,MTLS,35224.0,0.04614838931784272
+    0,2020-12-16,TSLA,3355.0,0.002104745564491819
+    0,2020-12-17,TSLA,2013.0,0.0012739111443980909
     ...
     0,2020-12-24,NVDA,1170.0,0.00897875291393339
     0,2020-12-24,AAPL,5976.0,0.03754061679896769
@@ -122,11 +148,11 @@ def get_ark_diff(date_picked):
         #read into df
         if len(out_df) > 0:
             tmp_df = pd.read_csv(out_file_path)
+            tmp_df.drop(tmp_df[tmp_df.date != csv_date_str].index, inplace=True)
             out_df = pd.concat([out_df, tmp_df])
         else:
             out_df = pd.read_csv(out_file_path)
-
-        out_df.drop(out_df[out_df.date != csv_date_str].index, inplace=True)
+            out_df.drop(out_df[out_df.date != csv_date_str].index, inplace=True)
 
     out_df.drop(columns=['diff2marketcap'], inplace=True)
     tmp_df = out_df.groupby(['ticker'])['diff'].sum().reset_index()
@@ -158,7 +184,7 @@ def get_all_ark_symbol(date_picked):
         #arklist.extend(csv_list)
         arklist = list(set(arklist + csv_list))
 
-    #remove some invalid tickers, i.e. ticker from HK...
+    #remove some non-US tickers, i.e. ticker from HK...
     for tk in arklist:
 
         find_digi = False
