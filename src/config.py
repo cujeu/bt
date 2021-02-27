@@ -14,6 +14,7 @@ conf_rawdata_path = conf_app_path + conf_rawdata_path
 conf_backtest_data_path = conf_app_path + conf_backtest_data_path
 
 conf_sp500_name = all_conf["sp500_name"]
+russell1000_name = all_conf["russell1000_name"]
 conf_date = all_conf["ohlv"][0]
 conf_open = all_conf["ohlv"][1]
 conf_high = all_conf["ohlv"][2]

@@ -454,6 +454,12 @@ def runstrat(args=None):
     #    mk_df.to_csv(f, header=False)
     #    f.close
 
+    ## 3. scan russell
+    ticker_list = get_growth_russell_symbols()
+    mk_df = start_scan(ticker_list, start_date, end_date)
+    filename = conf_data_path + 'scan_russell.csv'
+    mk_df.to_csv(filename, encoding='utf8')
+
     """
     ## 3.scan all sp500
     ticker_list = get_all_symbols()

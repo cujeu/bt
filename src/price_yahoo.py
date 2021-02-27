@@ -20,7 +20,8 @@ def get_price_yahoo(all_tickers, years):
 
     cp_tickers = all_tickers
     attempt = 0
-    drop = []
+    bad_list = ['ADYEN', 'KSPI']
+    drop = bad_list
     # names in cols are features of get_historical_price_data
     cols = ["formatted_date","open", "high", "low", "close","adjclose","volume"]
     #cols = ["Date","Open", "High", "Low", "Close","Adj Close","Volume"]
@@ -88,6 +89,14 @@ def download_sector_prices(sector_name, years):
     tlist = get_sector_symbols(sector_name)
     get_price_yahoo(tlist, years)
 
+def download_russell_prices(years):
+    tlist = get_russell_symbols()
+    get_price_yahoo(tlist, years)
+
+def download_growth_russell_prices(years):
+    tlist = get_growth_russell_symbols()
+    get_price_yahoo(tlist, years)
+
 def download_all_prices(years):
     tlist = get_all_symbols()
     get_price_yahoo(tlist, years)
@@ -97,7 +106,8 @@ if __name__ == "__main__":
     ##download_sector_prices("Consumer Staples",10)
     #download_ark_prices(10)
 
-    download_all_prices(10)
+    #download_all_prices(10)    #sp500 data
+    download_growth_russell_prices(10)
     download_etf_prices(10)
     download_all_ark_prices(10)
 

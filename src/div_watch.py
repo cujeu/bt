@@ -364,6 +364,12 @@ def runstrat(args=None):
     filename = conf_data_path + 'div_ark.csv'
     mk_df.to_csv(filename, encoding='utf8')
 
+    #4. watch growth russell
+    ticker_list = get_growth_russell_symbols()
+    mk_df = start_scan(ticker_list, start_date, end_date)
+    filename = conf_data_path + 'div_russell.csv'
+    mk_df.to_csv(filename, encoding='utf8')
+    # ticker_list[0] must cover start_date to end_date, as a reference
 
     """
     args = parse_args(args)

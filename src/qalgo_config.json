@@ -11,5 +11,6 @@
     "rawdata_path" : "data/raw/",
     "sp500_url": "https://en.wikipedia.org/wiki/List_of_S%26P_500_companies",
     "sp500_name" : "sp500.csv",
+    "russell1000_name" : "russell1000.csv",
     "api_key" : "?apikey=61e6648f0fb7e4ea519b18744db9dc43"
 }

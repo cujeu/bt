@@ -74,6 +74,11 @@ def read_csv_df():
     df_data = pd.read_csv(file_name)
     return df_data
 
+def read_russell_csv_df():
+    file_name = conf_data_path + russell1000_name
+    df_data = pd.read_csv(file_name)
+    return df_data
+
 #ark_df is formated df in scaner, now add the changes as new column
 def add_ark_diff(ark_df, date_str):
     date_list = []
@@ -245,8 +250,43 @@ def get_sector_symbols(sector_name):
     """
     return df_data[df_data['sector']==sector_name]['ticker'].tolist()
 
+def get_russell_symbols():
+    df_data = read_russell_csv_df()
+    
+    #drop the unnessary 2 lines in tail
+    df_data.drop(df_data.tail(2).index, inplace=True)
+    #tlist = df_data['Symbol'].values.tolist()
+    tlist = []
+    for index, row in df_data.iterrows():
+        s = row['Symbol']
+        #remove invalid char [. space] in symbol
+        if s.find('.') < 0 and s.find(' ') < 0:
+            tlist.append(s)
+    return tlist
+
+def get_growth_russell_symbols():
+    df_data = read_russell_csv_df()
+    
+    #drop the unnessary 2 lines in tail
+    df_data.drop(df_data.tail(2).index, inplace=True)
+    
+    #upper bound cap 18B , lower bound 2B
+    tlist = []
+    capLarge = 25000000000.0
+    capSmall =  2000000000.0
+    for index, row in df_data.iterrows():
+        cap = row['Market Cap']
+        if cap < capSmall or cap > capLarge:
+            continue
+        s = row['Symbol']
+        #remove invalid char [. space] in symbol
+        if s.find('.') < 0 and s.find(' ') < 0:
+            tlist.append(s)
+    return tlist
+
 if __name__ == "__main__":
-    print(get_chg_ark_symbol("201224"))
+    print(get_growth_russell_symbols())
+    ##print(get_chg_ark_symbol("201224"))
     ##create_sp500_csv()
     ##print(get_sector_symbols("Consumer Discretionary"))
 

@@ -44,7 +44,7 @@ def parse_args(pargs=None):
 
     # Defaults for dates
     parser.add_argument('--target', '-t', required=False, default='etf',
-                        help='etf/ark/sp500')
+                        help='etf/ark/rusell/sp500')
 
     parser.add_argument('--plot', '-p', required=False, default='yes',
                         help='plot or not')
