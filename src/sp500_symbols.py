@@ -231,7 +231,9 @@ def get_etf_symbols():
                 'ONLN','QCLN','IBUY','FDNI','PBW',
                 'ESPO','ARKQ','ARKF','UBOT','OGIG',
                 'ACES','TAN' ,'EMQQ','CNRG','SMOG',
-                'XLE', 'LIT', 'SKYY','BOTZ','HAIL']
+                'QQQ', 'LIT', 'SKYY','BOTZ','HAIL',
+                'XLU', 'XLV', 'XLF', 'XLE', 'XLRE',
+                'XLB', 'XLC', 'XLI', 'XLP', 'XTL']
     etf_list.sort()
     return etf_list
 
@@ -249,6 +251,35 @@ def get_sector_symbols(sector_name):
     "Energy"]
     """
     return df_data[df_data['sector']==sector_name]['ticker'].tolist()
+
+def get_info_by_sym(ticker_name):
+    df_data = read_russell_csv_df()
+    
+    #drop the unnessary 2 lines in tail
+    df_data.drop(df_data.tail(2).index, inplace=True)
+    tlist = []
+    for index, row in df_data.iterrows():
+        s = row['Symbol']
+        if s == ticker_name:
+            tlist.append(row['Sector'])
+            tlist.append(row['Industry'])
+    return tlist
+
+def get_sec_by_symlist(ticker_list):
+    df_data = read_russell_csv_df()
+    
+    #drop the unnessary 2 lines in tail
+    df_data.drop(df_data.tail(2).index, inplace=True)
+    slist = []
+    for t in ticker_list:
+        slist.append("NA")
+        for index, row in df_data.iterrows():
+            s = row['Symbol']
+            if s == t:
+                info = row['Sector'] + '/' + row['Industry']
+                slist[-1] = info
+                break
+    return slist
 
 def get_russell_symbols():
     df_data = read_russell_csv_df()
@@ -284,8 +315,98 @@ def get_growth_russell_symbols():
             tlist.append(s)
     return tlist
 
+def get_russell_symbols_by_sector(sector_name):
+    df_data = read_russell_csv_df()
+    
+    #drop the unnessary 2 lines in tail
+    df_data.drop(df_data.tail(2).index, inplace=True)
+    
+    #upper bound cap 18B , lower bound 2B
+    tlist = []
+    for index, row in df_data.iterrows():
+        sec = row['Sector']
+        if sec == sector_name:
+            s = row['Symbol']
+            #remove invalid char [. space] in symbol
+            if s.find('.') < 0 and s.find(' ') < 0:
+                tlist.append(s)
+
+    return tlist
+
+# list stock symbols by industry
+def get_russell_symbols_by_ind(ind_name):
+    df_data = read_russell_csv_df()
+    
+    #drop the unnessary 2 lines in tail
+    df_data.drop(df_data.tail(2).index, inplace=True)
+    
+    tlist = []
+    for index, row in df_data.iterrows():
+        sec = row['Industry']
+        if sec == ind_name:
+            s = row['Symbol']
+            #remove invalid char [. space] in symbol
+            if s.find('.') < 0 and s.find(' ') < 0:
+                tlist.append(s)
+
+    return tlist
+
+#list all industry names
+def get_russell_industry():
+    df_data = read_russell_csv_df()
+    
+    #drop the unnessary 2 lines in tail
+    df_data.drop(df_data.tail(2).index, inplace=True)
+    
+    # pick Industry column from 
+    #Symbol,Name,Industry,"52W %Chg","Market Cap",Sales(a),"Net Income(a)",Sector
+    slist = []
+    for index, row in df_data.iterrows():
+        indu = row['Industry']
+        if not indu in slist:
+            slist.append(indu)
+    return slist
+
+#list all sector names
+def get_russell_sectors():
+    df_data = read_russell_csv_df()
+    
+    #drop the unnessary 2 lines in tail
+    df_data.drop(df_data.tail(2).index, inplace=True)
+    
+    # pick sector column from 
+    #Symbol,Name,Industry,"52W %Chg","Market Cap",Sales(a),"Net Income(a)",Sector
+    slist = []
+    for index, row in df_data.iterrows():
+        sec = row['Sector']
+        if not sec in slist:
+            slist.append(sec)
+    return slist
+
+#list industries of a sector
+def get_russell_industry_sector(sector_name):
+    df_data = read_russell_csv_df()
+    
+    #drop the unnessary 2 lines in tail
+    df_data.drop(df_data.tail(2).index, inplace=True)
+    
+    # pick sector column from 
+    #Symbol,Name,Industry,"52W %Chg","Market Cap",Sales(a),"Net Income(a)",Sector
+    slist = []
+    for index, row in df_data.iterrows():
+        sec = row['Sector']
+        if sec == sector_name:
+            indu = row['Industry']
+            if not indu in slist:
+                slist.append(indu)
+    return slist
+
 if __name__ == "__main__":
-    print(get_growth_russell_symbols())
+
+    print(get_russell_sectors())
+    #print(get_russell_industry_sector('Medical'))
+
+    #print(get_growth_russell_symbols())
     ##print(get_chg_ark_symbol("201224"))
     ##create_sp500_csv()
     ##print(get_sector_symbols("Consumer Discretionary"))

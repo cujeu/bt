@@ -32,7 +32,10 @@ def get_csv_write_pickle():
     if len(csv_dir_list) > 0:
         latest = csv_dir_list[-1]
         print('csv latest =' + latest)
-
+    
+    req_headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:50.0) Gecko/20100101 Firefox/50.0'}
+    #agent = {"User-Agent":"Mozilla/5.0"}
+    #source=requests.get(url, headers=headers).text
     urls = arklinks
     #read from web and out into csv directory
     for url in urls:
@@ -42,7 +45,7 @@ def get_csv_write_pickle():
         local_file = os.path.join(date_dir, url.split('/')[-1])
         if not os.path.exists(local_file):
             fark = open(local_file, "wb")
-            fark.write(requests.get(url).content)
+            fark.write(requests.get(url, headers=req_headers).content)
             fark.close()
 
     # make a file list from pickle_dir
@@ -180,6 +183,7 @@ if DOWNLOAD:
 
 #write the changes
 out_changes()
+print("Done")
 
 # for date in date_dirs:
 #     date_datetime = datetime.datetime.strptime(date, DATETIME_FORMAT)

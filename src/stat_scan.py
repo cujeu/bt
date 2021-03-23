@@ -17,12 +17,12 @@ from config import *
 from sp500_symbols import *
 from inst_ind import *
 
-def run_stat(target_csv):
+def run_stat(target_csv, target_strat=0):
     filename = conf_data_path + 'scan_'+ target_csv + '.csv'
     #mk_df = pd.DataFrame(columns = ["sym", "date", "close", "high", "perc", "exit","edate","eperc"])
     #mk_df= pd.read_csv(filename) #, index_col=0, parse_dates=True)
     mk_df= pd.read_csv(filename, index_col=[0]) #, index_col=0, parse_dates=True)
-
+    mk_df.drop(mk_df[mk_df.strategy == target_strat].index, inplace=True)
     #view #1: use hist only
     #mk_df.hist(column=['perc','eperc'])
 
@@ -44,7 +44,9 @@ def parse_args(pargs=None):
 
     # Defaults for dates
     parser.add_argument('--target', '-t', required=False, default='etf',
-                        help='etf/ark/rusell/sp500')
+                        help='etf/ark/russell/sp500')
+    parser.add_argument('--strategy', '-s', required=False, default='0',
+                        help='1/2')
 
     parser.add_argument('--plot', '-p', required=False, default='yes',
                         help='plot or not')
@@ -57,9 +59,9 @@ if __name__ == '__main__':
     args = parse_args()
 
     # Parse ark etf
-    for a, d in ((getattr(args, x), x) for x in ['target', 'plot']):
+    for a, d in ((getattr(args, x), x) for x in ['target', 'strategy', 'plot']):
         if d == 'target':
-            run_stat(a)
+            run_stat(args.target, int(args.strategy))
         elif d == 'plot':
             print(a)
 

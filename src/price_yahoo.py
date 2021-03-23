@@ -107,7 +107,8 @@ if __name__ == "__main__":
     #download_ark_prices(10)
 
     #download_all_prices(10)    #sp500 data
-    download_growth_russell_prices(10)
+    #download_growth_russell_prices(10)
+    download_russell_prices(10)
     download_etf_prices(10)
     download_all_ark_prices(10)
 

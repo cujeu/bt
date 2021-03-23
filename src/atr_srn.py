@@ -4,6 +4,7 @@ from __future__ import (absolute_import, division, print_function,
 import time 
 import datetime  
 import os
+import argparse
 #import sys  
 #import numpy as np
 #import random
@@ -41,6 +42,9 @@ class atr_scrn_strategy(bt.Strategy):
         self.end_date = end_date
         self.position_list = [] #postion order ["sym", "date", "close", "high", "perc", "exit","edate","eperc","strategy"]
         self.csCount = 0
+        self.periodTD9 = 12
+        self.pastTD9 = [0] * 20
+        self.downTD9 = 0
 
         self.hasPosition = False
         self.entryPrice = 100
@@ -183,6 +187,13 @@ class atr_scrn_strategy(bt.Strategy):
                              data.priceDiv.cs[0] > self.newLowDiv and
                              (self.bar_num - self.newLowBar) > 1)) and
                             data.priceDiv.cs[0] > data.priceDiv.cs[-1])
+                if cond_div:
+                    #search past to find TD9
+                    cond_div = False
+                    for x in range(5): #self.periodTD9):
+                        if self.pastTD9[(self.bar_num - x) % self.periodTD9] >= 9:
+                            cond_div = True
+                            break
 
             #if (cond_atr and (data.priceDiv.cs[0] > data.priceDiv.sm[0] and
             #                 data.priceDiv.cs[0] < data.priceDiv.ml[0] and
@@ -220,6 +231,13 @@ class atr_scrn_strategy(bt.Strategy):
             return
 
         data = self.getdatabyname(self.pool_list[0])        
+        if data.close[0] < data.close[-4]:
+            self.downTD9 += 1
+            #self.downTD9 = self.downTD9 % self.periodTD9
+        else:
+            self.downTD9 = 0
+        self.pastTD9 [self.bar_num % self.periodTD9] = self.downTD9
+
         if data.priceDiv.cs[0] >= 0:
             if (self.csCount > 1):
                 self.csCount -= 2
@@ -380,47 +398,7 @@ def start_scan(ticker_list, start_date, end_date):
     print ("++++++++++  ")
     return mk_df
 
-def parse_args(pargs=None):
-    parser = argparse.ArgumentParser(
-        formatter_class = argparse.ArgumentDefaultsHelpFormatter,
-        description=('Multiple Values and Brackets'))
-
-    parser.add_argument('--data0', default='../data/backtest/AAPL.csv',
-                        required=False, help='Data0 to read in')
-
-    parser.add_argument('--data1', default='../data/backtest/AMZN.csv',
-                        required=False, help='Data1 to read in')
-
-    parser.add_argument('--data2', default='../data/backtest/MSFT.csv',
-                        required=False, help='Data1 to read in')
-
-    # Defaults for dates
-    parser.add_argument('--fromdate', required=False, default='2011-01-01',
-                        help='Date[time] in YYYY-MM-DD[THH:MM:SS] format')
-
-    parser.add_argument('--todate', required=False, default='2017-01-01',
-                        help='Date[time] in YYYY-MM-DD[THH:MM:SS] format')
-
-    parser.add_argument('--cerebro', required=False, default='',
-                        metavar='kwargs', help='kwargs in key=value format')
-
-    parser.add_argument('--broker', required=False, default='',
-                        metavar='kwargs', help='kwargs in key=value format')
-
-    parser.add_argument('--sizer', required=False, default='',
-                        metavar='kwargs', help='kwargs in key=value format')
-
-    parser.add_argument('--strat', required=False, default='',
-                        metavar='kwargs', help='kwargs in key=value format')
-
-    parser.add_argument('--plot', required=False, default='',
-                        nargs='?', const='{}',
-                        metavar='kwargs', help='kwargs in key=value format')
-
-    return parser.parse_args(pargs)
-
-    
-def runstrat(args=None):
+def runstrat(sector_name):
     today = datetime.datetime.today().date()
     shift = datetime.timedelta(max(1,(today.weekday() + 6) % 7 - 3))
     end_date = today - shift + datetime.timedelta(days=1)
@@ -455,8 +433,15 @@ def runstrat(args=None):
     #    f.close
 
     ## 3. scan russell
-    ticker_list = get_growth_russell_symbols()
+    if sector_name == 'all':
+        ticker_list = get_growth_russell_symbols()
+    else:
+        ticker_list = get_russell_symbols_by_sector(sector_name)
     mk_df = start_scan(ticker_list, start_date, end_date)
+    ## get ticker list and then add new sector column
+    tlist = mk_df["sym"].tolist()
+    slist = get_sec_by_symlist(tlist)
+    mk_df['sector'] = slist
     filename = conf_data_path + 'scan_russell.csv'
     mk_df.to_csv(filename, encoding='utf8')
 
@@ -471,81 +456,24 @@ def runstrat(args=None):
     #    f.close
     """
 
-    """
-    args = parse_args(args)
+def parse_args(pargs=None):
+    parser = argparse.ArgumentParser(description='ATR Startegy')
 
-    # Data feed kwargs
-    kwargs = dict()
+    # Defaults for dates
+    parser.add_argument('--sector', '-s', required=False, default='all',
+                        help='russell sectors')
+    parser.add_argument('--industry', '-i', required=False, default='all',
+                        help='russell industry')
 
-    # Parse from/to-date
-    dtfmt, tmfmt = '%Y-%m-%d', 'T%H:%M:%S'
-    for a, d in ((getattr(args, x), x) for x in ['fromdate', 'todate']):
-        if a:
-            strpfmt = dtfmt + tmfmt * ('T' in a)
-            kwargs[d] = datetime.datetime.strptime(a, strpfmt)
 
-    # Data feed
-    data0 = bt.feeds.YahooFinanceCSVData(dataname=args.data0, **kwargs)
-    cerebro.adddata(data0, name='d0')
-
-    data1 = bt.feeds.YahooFinanceCSVData(dataname=args.data1, **kwargs)
-    data1.plotinfo.plotmaster = data0
-    cerebro.adddata(data1, name='d1')
-
-    data2 = bt.feeds.YahooFinanceCSVData(dataname=args.data2, **kwargs)
-    data2.plotinfo.plotmaster = data0
-    cerebro.adddata(data2, name='d2')
-
-    # Broker
-    cerebro.broker = bt.brokers.BackBroker(**eval('dict(' + args.broker + ')'))
-    cerebro.broker.setcommission(commission=0.001)
-
-    # Sizer
-    # cerebro.addsizer(bt.sizers.FixedSize, **eval('dict(' + args.sizer + ')'))
-    cerebro.addsizer(TestSizer, **eval('dict(' + args.sizer + ')'))
-
-    # Strategy
-    cerebro.addstrategy(St, **eval('dict(' + args.strat + ')'))
-
-    # Execute
-    cerebro.run(**eval('dict(' + args.cerebro + ')'))
-
-    if args.plot:  # Plot if requested to
-        cerebro.plot(**eval('dict(' + args.plot + ')'))
-    """
-
-    """
-    # the oringinal code, usign CSV and data fiel
-    joinquant_day_kwargs = dict(
-                fromdate = datetime.datetime(2005, 1,1),
-                todate = datetime.datetime(2019, 11, 29),
-                timeframe = bt.TimeFrame.Days,
-                compression = 1,
-                dtformat=('%Y-%m-%d'),
-                datetime=0,
-                high=4,
-                low=3,
-                open=1,
-                close=2,
-                volume=5,
-                openinterest=6,
-                factor=7,
-                pb_ratio=10,
-                pe_ratio=11)
-    
-    data_path="/home/yun/data/stocks/"
-    with open("/home/yun/data/all_index_50_stock_list.pkl",'rb') as f:
-        file_list=pickle.load(f)
-    file_list=[i+'.csv' for i in file_list]
-    file_list=file_list
-    print(file_list)
-    count=0
-    for file in file_list:
-        print(count,file)
-        count+=1
-        feed = GenericCSV_PB_PE(dataname = data_path+file, **joinquant_day_kwargs)
-        cerebro.adddata(feed, name = file[:-4])
-    """
+    return parser.parse_args(pargs)
  
 if __name__ == '__main__':
-    runstrat()
+    args = parse_args()
+    for a, d in ((getattr(args, x), x) for x in ['sector', 'industry']):
+        if d == 'sector':
+            runstrat(args.sector)
+            #print(get_russell_symbols_by_sector(args.sector))
+        elif d == 'industry':
+            print(a)
+
