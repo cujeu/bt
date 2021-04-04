@@ -79,6 +79,11 @@ def read_russell_csv_df():
     df_data = pd.read_csv(file_name)
     return df_data
 
+def write_russell_csv_df(df_data):
+    file_name = conf_data_path + russell1000_name
+    df_data.to_csv(file_name, index=False)
+    return
+
 #ark_df is formated df in scaner, now add the changes as new column
 def add_ark_diff(ark_df, date_str):
     date_list = []
@@ -226,10 +231,10 @@ def get_ark_symbols():
     return ark_list
 
 def get_etf_symbols():
-    etf_list =[ 'FNGU','FNGO','CWEB','TQQQ','ARKW',
-                'ARKG','ARKK','TECL','QLD' ,'ROM',
+    etf_list =[ 'ARKK','ARKG','ARKQ','ARKF','ARKW',
+                'TECL','FNGU','SOXX','QLD' ,'ROM',
                 'ONLN','QCLN','IBUY','FDNI','PBW',
-                'ESPO','ARKQ','ARKF','UBOT','OGIG',
+                'ESPO','CWEB','TQQQ','UBOT','OGIG',
                 'ACES','TAN' ,'EMQQ','CNRG','SMOG',
                 'QQQ', 'LIT', 'SKYY','BOTZ','HAIL',
                 'XLU', 'XLV', 'XLF', 'XLE', 'XLRE',
@@ -256,20 +261,29 @@ def get_info_by_sym(ticker_name):
     df_data = read_russell_csv_df()
     
     #drop the unnessary 2 lines in tail
-    df_data.drop(df_data.tail(2).index, inplace=True)
+    #df_data.drop(df_data.tail(2).index, inplace=True)
+    # column names
+    #Symbol,Name,Industry,"52W %Chg","Market Cap",Sales(a),"Net Income(a)",Sector,"5Y Rev%",ROE%,Debt/Equity,"Price/Cash Flow"
     tlist = []
     for index, row in df_data.iterrows():
         s = row['Symbol']
         if s == ticker_name:
             tlist.append(row['Sector'])
             tlist.append(row['Industry'])
+            tlist.append(row['Market Cap'])
+            tlist.append(row['Net Income(a)'])
+            tlist.append(row['5Y Rev%'])
+            tlist.append(row['ROE%'])
+            tlist.append(row['Debt/Equity'])
+            tlist.append(row['Price/Cash Flow'])
+            break;
     return tlist
 
 def get_sec_by_symlist(ticker_list):
     df_data = read_russell_csv_df()
     
     #drop the unnessary 2 lines in tail
-    df_data.drop(df_data.tail(2).index, inplace=True)
+    #df_data.drop(df_data.tail(2).index, inplace=True)
     slist = []
     for t in ticker_list:
         slist.append("NA")
@@ -285,7 +299,7 @@ def get_russell_symbols():
     df_data = read_russell_csv_df()
     
     #drop the unnessary 2 lines in tail
-    df_data.drop(df_data.tail(2).index, inplace=True)
+    #df_data.drop(df_data.tail(2).index, inplace=True)
     #tlist = df_data['Symbol'].values.tolist()
     tlist = []
     for index, row in df_data.iterrows():
@@ -299,7 +313,7 @@ def get_growth_russell_symbols():
     df_data = read_russell_csv_df()
     
     #drop the unnessary 2 lines in tail
-    df_data.drop(df_data.tail(2).index, inplace=True)
+    #df_data.drop(df_data.tail(2).index, inplace=True)
     
     #upper bound cap 18B , lower bound 2B
     tlist = []
@@ -319,7 +333,7 @@ def get_russell_symbols_by_sector(sector_name):
     df_data = read_russell_csv_df()
     
     #drop the unnessary 2 lines in tail
-    df_data.drop(df_data.tail(2).index, inplace=True)
+    #df_data.drop(df_data.tail(2).index, inplace=True)
     
     #upper bound cap 18B , lower bound 2B
     tlist = []
@@ -338,7 +352,7 @@ def get_russell_symbols_by_ind(ind_name):
     df_data = read_russell_csv_df()
     
     #drop the unnessary 2 lines in tail
-    df_data.drop(df_data.tail(2).index, inplace=True)
+    #df_data.drop(df_data.tail(2).index, inplace=True)
     
     tlist = []
     for index, row in df_data.iterrows():
@@ -356,7 +370,7 @@ def get_russell_industry():
     df_data = read_russell_csv_df()
     
     #drop the unnessary 2 lines in tail
-    df_data.drop(df_data.tail(2).index, inplace=True)
+    #df_data.drop(df_data.tail(2).index, inplace=True)
     
     # pick Industry column from 
     #Symbol,Name,Industry,"52W %Chg","Market Cap",Sales(a),"Net Income(a)",Sector
@@ -372,7 +386,7 @@ def get_russell_sectors():
     df_data = read_russell_csv_df()
     
     #drop the unnessary 2 lines in tail
-    df_data.drop(df_data.tail(2).index, inplace=True)
+    #df_data.drop(df_data.tail(2).index, inplace=True)
     
     # pick sector column from 
     #Symbol,Name,Industry,"52W %Chg","Market Cap",Sales(a),"Net Income(a)",Sector
@@ -388,7 +402,7 @@ def get_russell_industry_sector(sector_name):
     df_data = read_russell_csv_df()
     
     #drop the unnessary 2 lines in tail
-    df_data.drop(df_data.tail(2).index, inplace=True)
+    #df_data.drop(df_data.tail(2).index, inplace=True)
     
     # pick sector column from 
     #Symbol,Name,Industry,"52W %Chg","Market Cap",Sales(a),"Net Income(a)",Sector
@@ -400,6 +414,37 @@ def get_russell_industry_sector(sector_name):
             if not indu in slist:
                 slist.append(indu)
     return slist
+
+# make data frame clean
+def div1000000(x):
+    try:
+        x = float(x)
+        return x / 1000000
+    except AttributeError:
+        return 0
+
+def refine_russell_data():
+    df_data = read_russell_csv_df()
+    #drop the unnessary 2 lines in tail
+    df_data.drop(df_data.tail(2).index, inplace=True)
+
+    # Delete these row indexes contain invalid symbol (BRK.B) from dataFrame
+    indexNames = df_data[ df_data['Symbol'] == 'GOOGL' ].index
+    df_data.drop(indexNames , inplace=True)
+    indexNames = df_data[ df_data['Symbol'].str.contains("\.")].index
+    df_data.drop(indexNames , inplace=True)
+    # "Symbol	Name	Industry	52W %Chg	Market Cap	Sales(a)	Net Income(a)	Sector	5Y Rev%	ROE%	Debt/Equity	Price/Cash Flow"
+    #df[1] = df[1].apply(add_one)
+    df_data['52W %Chg'] = df_data['52W %Chg'].apply(lambda x: x.strip('%'))
+    df_data['5Y Rev%'] = df_data['5Y Rev%'].apply(lambda x: x.strip('%'))
+    df_data['ROE%'] = df_data['ROE%'].apply(lambda x: x.strip('%'))
+
+    df_data['Market Cap'] = df_data['Market Cap'].apply(lambda x: x/1000000)
+    df_data['Sales(a)'] = df_data['Sales(a)'].apply(lambda x: div1000000(x))
+    df_data['Net Income(a)'] = df_data['Net Income(a)'].apply(lambda x: div1000000(x))
+    write_russell_csv_df(df_data)
+    
+    return
 
 if __name__ == "__main__":
 
