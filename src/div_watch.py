@@ -58,7 +58,7 @@ class div_ema_scan_strategy(bt.Strategy):
             d.ema20 = btind.ExponentialMovingAverage(d, period=20)
             d.ema60 = btind.ExponentialMovingAverage(d, period=60)
             d.priceDiv = PriceDiv(d)
-            self.log('stategy data init :' + d._name)
+            self.log('stategy Divergence init :' + d._name)
 
     def stop(self):
         stock = self.pool_list[0]
@@ -190,16 +190,6 @@ def start_scan(ticker_list, start_date, end_date):
     start_tm = datetime.datetime(year=start_date.year, month=start_date.month, day=start_date.day,)
     #mk_df = pd.DataFrame([["a",1, 2, 3]], columns = ["sym", "cs", "sm", "ml"])
     mk_df = pd.DataFrame(columns = conf_mk_view_col)
-    """
-    if 'LSPD' in ticker_list:
-        ticker_list.remove('LSPD')
-    if 'KSPI' in ticker_list:
-        ticker_list.remove('KSPI')
-    if 'ADYEN' in ticker_list:
-        ticker_list.remove('ADYEN')
-    if 'LUMN' in ticker_list:
-        ticker_list.remove('LUMN')
-    """
     for ticker in ticker_list:
     
         # entry point
@@ -290,48 +280,55 @@ def runstrat(sector_name):
     #start_date = datetime.datetime(2015, 1,1)
     start_date = end_date - datetime.timedelta(days=5*365)-datetime.timedelta(days=1)
 
-    """
-    #1. watch sp500
-
-    ticker_list = get_all_symbols()
-    mk_df = start_scan(ticker_list, start_date, end_date)
-    filename = conf_data_path + 'div_sp500.csv'
-    mk_df.to_csv(filename, encoding='utf8')
-    # ticker_list[0] must cover start_date to end_date, as a reference
-    """
-
-    #2. watch ETFs
-    ticker_list = get_etf_symbols()
-    #ticker_list = ['TECL','FNGU','FNGO','CWEB','TQQQ','ARKW','ARKG','ARKK','QLD' ,'ROM']
-    #ticker_list = ['TECL', 'FNGU','ARKK']
-    #print(ticker_list)
-    mk_df = start_scan(ticker_list, start_date, end_date)
-    filename = conf_data_path + 'div_etf.csv'
-    mk_df.to_csv(filename, encoding='utf8')
-
-    #3. watch ARK
-    DATETIME_FORMAT = '%y%m%d'
-    csv_dir = os.path.join(conf_data_path ,'csv')
-    csv_list = os.listdir(csv_dir)
-    csv_list.sort()
-    if len(csv_list) > 0:
-        date_str = csv_list[-1]
-    else:
-        date_str = datetime.datetime.strftime(datetime.datetime.now(), DATETIME_FORMAT)
-
-    ticker_list = get_all_ark_symbol(date_str)
-    mk_df = start_scan(ticker_list, start_date, end_date)
-    # diff column is latest day position change
-    mk_df = add_ark_diff(mk_df, date_str)
-
-    filename = conf_data_path + 'div_ark.csv'
-    mk_df.to_csv(filename, encoding='utf8')
-
-    #4. watch growth russell
     if sector_name == 'all':
+        """
+        #1. watch sp500
+
+        ticker_list = get_all_symbols()
+        mk_df = start_scan(ticker_list, start_date, end_date)
+        filename = conf_data_path + 'div_sp500.csv'
+        mk_df.to_csv(filename, encoding='utf8')
+        # ticker_list[0] must cover start_date to end_date, as a reference
+        """
+
+        #2. watch ETFs
+        ticker_list = get_etf_symbols()
+        #ticker_list = ['TECL','FNGU','FNGO','CWEB','TQQQ','ARKW','ARKG','ARKK','QLD' ,'ROM']
+        #ticker_list = ['TECL', 'FNGU','ARKK']
+        #print(ticker_list)
+        g_newlow_list.append(["===ETF",str(end_date)])
+        mk_df = start_scan(ticker_list, start_date, end_date)
+        filename = conf_data_path + 'div_etf.csv'
+        mk_df.to_csv(filename, encoding='utf8')
+
+        #3. watch ARK
+        DATETIME_FORMAT = '%y%m%d'
+        csv_dir = os.path.join(conf_data_path ,'csv')
+        csv_list = os.listdir(csv_dir)
+        csv_list.sort()
+        if len(csv_list) > 0:
+            date_str = csv_list[-1]
+        else:
+            date_str = datetime.datetime.strftime(datetime.datetime.now(), DATETIME_FORMAT)
+
+        ticker_list = get_all_ark_symbol(date_str)
+        g_newlow_list.append(["===ARK",str(end_date)])
+        mk_df = start_scan(ticker_list, start_date, end_date)
+        # diff column is latest day position change
+        mk_df = add_ark_diff(mk_df, date_str)
+
+        filename = conf_data_path + 'div_ark.csv'
+        mk_df.to_csv(filename, encoding='utf8')
+
+    #4. watch russell
+    if sector_name == 'all':
+        ticker_list = get_strong_russell_symbols()
+    elif sector_name == 'grow':
+        #watch growth russell
         ticker_list = get_growth_russell_symbols()
     else:
         ticker_list = get_russell_symbols_by_sector(sector_name)
+    g_newlow_list.append(["===RUS",str(end_date)])
     mk_df = start_scan(ticker_list, start_date, end_date)
     filename = conf_data_path + 'div_russell.csv'
     ## get ticker list and then add new sector column
@@ -340,6 +337,7 @@ def runstrat(sector_name):
     mk_df['sector'] = slist
     mk_df.to_csv(filename, encoding='utf8')
     # ticker_list[0] must cover start_date to end_date, as a reference
+    print("scan done")
 
  
 def parse_args(pargs=None):
@@ -356,8 +354,13 @@ def parse_args(pargs=None):
  
 if __name__ == '__main__':
     args = parse_args()
+    runstrat(args.sector)
+
+    """
+    print(args.sector, args.industry)
     for a, d in ((getattr(args, x), x) for x in ['sector', 'industry']):
         if d == 'sector':
             runstrat(args.sector)
         elif d == 'industry':
             print(a)
+    """

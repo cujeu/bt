@@ -315,10 +315,10 @@ def get_growth_russell_symbols():
     #drop the unnessary 2 lines in tail
     #df_data.drop(df_data.tail(2).index, inplace=True)
     
-    #upper bound cap 18B , lower bound 2B
+    #upper bound cap 18B , lower bound 2B(here the unit is 1million)
     tlist = []
-    capLarge = 25000000000.0
-    capSmall =  2000000000.0
+    capLarge = 25000.0
+    capSmall =  2000.0
     for index, row in df_data.iterrows():
         cap = row['Market Cap']
         if cap < capSmall or cap > capLarge:
@@ -327,6 +327,27 @@ def get_growth_russell_symbols():
         #remove invalid char [. space] in symbol
         if s.find('.') < 0 and s.find(' ') < 0:
             tlist.append(s)
+    return tlist
+
+# top 20 companies, 
+# 1. sales  > 100M  2. net income >500M
+# 3. 5Y Rev% >50% 4. Debt/Equity < 2% 5. sorted by 5Y Rev%
+def get_strong_russell_symbols():
+    df_data = read_russell_csv_df()
+    
+    tlist = []
+    indexNames = df_data[df_data['Sales(a)'] < 100].index
+    df_data.drop(indexNames , inplace=True)
+    indexNames = df_data[df_data['Net Income(a)'] < 100].index
+    df_data.drop(indexNames , inplace=True)
+    #df_data[["5Y Rev%"]] = df_data[["5Y Rev%"]].apply(pd.to_numeric)
+    indexNames = df_data[df_data['5Y Rev%'] < 50].index
+    df_data.drop(indexNames , inplace=True)
+    indexNames = df_data[df_data['Debt/Equity'] > 2].index
+    df_data.drop(indexNames , inplace=True)
+
+    #df_data.to_csv('/home/jun/temp/test.csv', encoding='utf-8', index=False)
+    tlist = df_data["Symbol"].tolist()
     return tlist
 
 def get_russell_symbols_by_sector(sector_name):
@@ -436,6 +457,7 @@ def refine_russell_data():
     # "Symbol	Name	Industry	52W %Chg	Market Cap	Sales(a)	Net Income(a)	Sector	5Y Rev%	ROE%	Debt/Equity	Price/Cash Flow"
     #df[1] = df[1].apply(add_one)
     df_data['52W %Chg'] = df_data['52W %Chg'].apply(lambda x: x.strip('%'))
+    df_data['5Y Rev%'] = df_data['5Y Rev%'].apply(lambda x: x.replace(',',''))
     df_data['5Y Rev%'] = df_data['5Y Rev%'].apply(lambda x: x.strip('%'))
     df_data['ROE%'] = df_data['ROE%'].apply(lambda x: x.strip('%'))
 
@@ -448,7 +470,8 @@ def refine_russell_data():
 
 if __name__ == "__main__":
 
-    print(get_russell_sectors())
+    print(get_strong_russell_symbols())
+    #print(get_russell_sectors())
     #print(get_russell_industry_sector('Medical'))
 
     #print(get_growth_russell_symbols())

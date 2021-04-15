@@ -20,8 +20,8 @@ def parse_args(pargs=None):
                         help='russell ticker')
     parser.add_argument('--list', '-l', required=False, default='none',
                         help='russell fundamental')
-    parser.add_argument('--pretty', '-p', required=False, default='none',
-                        help='clean % in dataframe')
+    parser.add_argument('--wash', '-w', required=False, default='none',
+                        help='clean dataframe')
 
     return parser.parse_args(pargs)
 
@@ -50,14 +50,14 @@ if __name__ == "__main__":
     elif args.ticker != 'none':
         t = args.ticker.upper()
         print("== Ticker " + t)
-        print(get_info_by_sym(t))
+        print(get_info_by_sym(t.upper()))
     elif args.list != 'none':
         slist = args.list.split(',')
         print('Sector','Industry','Market Cap', 'Net Income(a)',
               '5Y Rev%','ROE%','Debt/Equity','Price/Cash Flow')
         for s in slist:
-            print(s + ':' + str(get_info_by_sym(s)))
-    elif args.pretty != 'none':
+            print(s + ':' + str(get_info_by_sym(s.upper())))
+    elif args.wash != 'none':
         refine_russell_data()
         print("data washed")
 

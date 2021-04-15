@@ -71,7 +71,7 @@ class atr_scrn_strategy(bt.Strategy):
             #d.data_kc = KeltnerChannel(d, periodEMA = 20, periodATR = 20, devfactor=1.5 )
             #d.data_rg = RGChannel(d)
 
-            self.log('stategy data init :' + d._name)
+            self.log('stategy ATR init :' + d._name)
 
     def stop(self):
         if self.hasPosition:
@@ -407,36 +407,43 @@ def runstrat(sector_name):
     # ticker_list[0] must cover start_date to end_date, as a reference
 
     ## 1. scan ETF
-    ticker_list = get_etf_symbols()
-    #ticker_list = ['TECL','FNGU','FNGO','CWEB','TQQQ','ARKW','ARKG','ARKK','QLD' ,'ROM']
-    mk_df = start_scan(ticker_list, start_date, end_date)
-    filename = conf_data_path + 'scan_etf.csv'
-    mk_df.to_csv(filename, encoding='utf8')
+    if sector_name == 'all':
+        ticker_list = get_etf_symbols()
+        #ticker_list = ['TECL','FNGU','FNGO','CWEB','TQQQ','ARKW','ARKG','ARKK','QLD' ,'ROM']
+        g_alert_list.append(["===ETF",str(end_date)])
+        mk_df = start_scan(ticker_list, start_date, end_date)
+        filename = conf_data_path + 'scan_etf.csv'
+        mk_df.to_csv(filename, encoding='utf8')
 
-    ## 2.scan ARK
-    #ticker_list = get_ark_symbols()
-    DATETIME_FORMAT = '%y%m%d'
-    csv_dir = os.path.join(conf_data_path ,'csv')
-    csv_list = os.listdir(csv_dir)
-    csv_list.sort()
-    if len(csv_list) > 0:
-        date_str = csv_list[-1]
-    else:
-        date_str = datetime.datetime.strftime(datetime.datetime.now(), DATETIME_FORMAT)
 
-    ticker_list = get_all_ark_symbol(date_str)
-    mk_df = start_scan(ticker_list, start_date, end_date)
-    filename = conf_data_path + 'scan_ark.csv'
-    mk_df.to_csv(filename, encoding='utf8')
-    #with open(filename, 'a') as f:
-    #    mk_df.to_csv(f, header=False)
-    #    f.close
+        ## 2.scan ARK
+        #ticker_list = get_ark_symbols()
+        DATETIME_FORMAT = '%y%m%d'
+        csv_dir = os.path.join(conf_data_path ,'csv')
+        csv_list = os.listdir(csv_dir)
+        csv_list.sort()
+        if len(csv_list) > 0:
+            date_str = csv_list[-1]
+        else:
+            date_str = datetime.datetime.strftime(datetime.datetime.now(), DATETIME_FORMAT)
+
+        ticker_list = get_all_ark_symbol(date_str)
+        g_alert_list.append(["===ARK",str(end_date)])
+        mk_df = start_scan(ticker_list, start_date, end_date)
+        filename = conf_data_path + 'scan_ark.csv'
+        mk_df.to_csv(filename, encoding='utf8')
+        #with open(filename, 'a') as f:
+        #    mk_df.to_csv(f, header=False)
+        #    f.close
 
     ## 3. scan russell
     if sector_name == 'all':
+        ticker_list = get_strong_russell_symbols()
+    elif sector_name == 'grow':
         ticker_list = get_growth_russell_symbols()
     else:
         ticker_list = get_russell_symbols_by_sector(sector_name)
+    g_alert_list.append(["===RUS",str(end_date)])
     mk_df = start_scan(ticker_list, start_date, end_date)
     ## get ticker list and then add new sector column
     tlist = mk_df["sym"].tolist()
@@ -444,6 +451,7 @@ def runstrat(sector_name):
     mk_df['sector'] = slist
     filename = conf_data_path + 'scan_russell.csv'
     mk_df.to_csv(filename, encoding='utf8')
+    print("scan done")
 
     """
     ## 3.scan all sp500
@@ -460,6 +468,7 @@ def parse_args(pargs=None):
     parser = argparse.ArgumentParser(description='ATR Startegy')
 
     # Defaults for dates
+    # example: python atr_srn -s all grow sector
     parser.add_argument('--sector', '-s', required=False, default='all',
                         help='russell sectors')
     parser.add_argument('--industry', '-i', required=False, default='all',
@@ -470,10 +479,13 @@ def parse_args(pargs=None):
  
 if __name__ == '__main__':
     args = parse_args()
+    runstrat(args.sector)
+    """
     for a, d in ((getattr(args, x), x) for x in ['sector', 'industry']):
         if d == 'sector':
             runstrat(args.sector)
             #print(get_russell_symbols_by_sector(args.sector))
         elif d == 'industry':
             print(a)
+    """
 
