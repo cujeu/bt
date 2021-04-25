@@ -42,6 +42,7 @@ class atr_scrn_strategy(bt.Strategy):
         self.end_date = end_date
         self.position_list = [] #postion order ["sym", "date", "close", "high", "perc", "exit","edate","eperc","strategy"]
         self.csCount = 0
+        self.barDiv = 0
         self.periodTD9 = 12
         self.pastTD9 = [0] * 20
         self.downTD9 = 0
@@ -52,7 +53,8 @@ class atr_scrn_strategy(bt.Strategy):
         self.newLowDiv = 100
         self.newLowBar = 0
         self.atrTrend = False
-        self.curStrategy = 0 #1:divergence #2:atr
+        self.curStrategy = 0 #0:idle 10:divergence 11: div + 20ma turn up div+20ma is what happen after divergence
+                             #20:atr
 
         global g_entry_list
         g_entry_list = []
@@ -122,13 +124,35 @@ class atr_scrn_strategy(bt.Strategy):
             #if (data.priceDiv.cs[0] < data.priceDiv.sm[0] and 
             #    data.priceDiv.cs[-1] > data.priceDiv.sm[-1]):
             
-            if (self.curStrategy == 1) and \
+            # in normal process 10 --> 11 --> 20 --> 0
+            if (self.curStrategy == 10):
+                # ema20 turn and close over ema20
+                if (data.close[0] > data.ema20[0]) and \
+                   (data.ema20[0] > data.ema20[-1] and data.ema20[-2] > data.ema20[-1]):
+                    self.curStrategy = 11
+                    self.barDiv = 0
+                    self.entryPrice = data.close[0]
+                    self.highPrice = data.close[0]
+                    result_list = self.position_list[-1]
+                    del self.position_list[-1]
+                    result_list[1] = str(self.current_date)
+                    result_list[2] = str(round(data.close[0], 2))
+                    result_list[3] = str(round(self.highPrice, 2))
+                    result_list[4] = str(round(100 * (self.highPrice - self.entryPrice) / self.entryPrice, 0))
+                    result_list[5] = str(round(data.close[0], 2))
+                    result_list[6] = str(self.current_date)
+                    result_list[7] = str(round(100 * (data.close[0] - self.entryPrice) / self.entryPrice, 0))
+                    result_list[8] = str(self.curStrategy)
+                    self.position_list.append(result_list)
+                    result_list = []
+
+            if ((self.curStrategy == 10) or (self.curStrategy == 11)) and \
                (data.priceDiv.cs[0] < 0 and data.priceDiv.cs[-1] > 0 and \
                 data.priceDiv.cs[0] < data.priceDiv.sm[0]) :
 
                 #transfer the strategy
                 if self.atrTrend:
-                    self.curStrategy = 2
+                    self.curStrategy = 21
                 else:
                     self.hasPosition = False
                     result_list = self.position_list[-1]
@@ -142,8 +166,9 @@ class atr_scrn_strategy(bt.Strategy):
                     result_list[8] = str(self.curStrategy)
                     self.position_list.append(result_list)
                     self.curStrategy = 0
+                    self.barDiv = 0
 
-            elif (self.curStrategy == 2) and (not self.atrTrend):
+            elif (self.curStrategy >= 20) and (not self.atrTrend):
                 self.hasPosition = False
                 result_list = self.position_list[-1]
                 del self.position_list[-1]
@@ -201,9 +226,10 @@ class atr_scrn_strategy(bt.Strategy):
 
                 if cond_atr or cond_div :
                     if cond_div:
-                        self.curStrategy = 1
+                        self.curStrategy = 10
+                        self.barDiv = self.bar_num
                     else:
-                        self.curStrategy = 2
+                        self.curStrategy = 20
                     self.hasPosition = True
                     self.entryPrice = data.close[0]
                     self.highPrice = data.close[0]
@@ -398,8 +424,8 @@ def start_scan(ticker_list, start_date, end_date):
     print ("++++++++++  ")
     return mk_df
 
-def runstrat(sector_name):
-    today = datetime.datetime.today().date()
+def runstrat(sector_name, today):
+    #today = datetime.datetime.today().date()
     shift = datetime.timedelta(max(1,(today.weekday() + 6) % 7 - 3))
     end_date = today - shift + datetime.timedelta(days=1)
     #start_date = datetime.datetime(2015, 1,1)
@@ -473,13 +499,20 @@ def parse_args(pargs=None):
                         help='russell sectors')
     parser.add_argument('--industry', '-i', required=False, default='all',
                         help='russell industry')
+    parser.add_argument('--date', '-d', required=False, default='none',
+                        help='target date')
 
 
     return parser.parse_args(pargs)
  
 if __name__ == '__main__':
     args = parse_args()
-    runstrat(args.sector)
+    if args.date != 'none':
+        today = datetime.datetime.strptime(args.date, '%Y-%m-%d')
+        today = today.date()
+    else:
+        today = datetime.datetime.today().date()
+    runstrat(args.sector,today)
     """
     for a, d in ((getattr(args, x), x) for x in ['sector', 'industry']):
         if d == 'sector':

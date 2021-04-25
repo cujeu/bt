@@ -32,7 +32,7 @@ class div_ema_scan_strategy(bt.Strategy):
         dt = dt or self.datas[0].datetime.date(0)
         print('{}, {}'.format(dt.isoformat(), txt))
 
-    def __init__(self, pool_list, dataId_to_ticker_d, ticker_to_dataId_d,start_date,end_date):
+    def __init__(self, pool_list, dataId_to_ticker_d, ticker_to_dataId_d,start_date,end_date, ref_price):
         # Keep a reference to the "close" line in the data[0] dataseries
         self.bar_num=0
         #self.index_50_date_stock_dict=self.get_index_50_date_stock()
@@ -42,6 +42,7 @@ class div_ema_scan_strategy(bt.Strategy):
         self.pool_list = pool_list
         self.start_date = start_date
         self.end_date = end_date
+        self.ref_price = ref_price
         self.newLowDiv = 100
         self.newLowIndex = 0
         self.csCount = 0
@@ -74,6 +75,9 @@ class div_ema_scan_strategy(bt.Strategy):
         mk_view_list[conf_ema20_idx] = round(data.ema20[0],2)
         mk_view_list[conf_ema20Chg_idx] = round(data.ema20[0] - data.ema20[-2],2)
         mk_view_list[conf_ema60_idx] = round(data.ema60[0],2)
+        mk_view_list[conf_date_idx] = str(self.end_date)
+        mk_view_list[conf_close_idx] = round(data.close[0],2)
+        mk_view_list[conf_ref_idx] = round(self.ref_price,2)
 
         if len(self.position_list) > 0:
             self.log('last div low:' + self.position_list[-1])
@@ -200,6 +204,7 @@ def start_scan(ticker_list, start_date, end_date):
         idx = 0
         cerebro_ticker_list = []
         cerebro_ticker_list.append(ticker)
+        ref_price = 0
         len_enough = True
         for tk in cerebro_ticker_list:
             filename = conf_backtest_data_path + tk + '.csv'
@@ -215,6 +220,7 @@ def start_scan(ticker_list, start_date, end_date):
             trading_data_df.index.names = ['date']
             trading_data_df.rename(columns={'Open' : 'open', 'High' : 'high', 'Low' : 'low',
                                             'Close' : 'close', 'Volume' : 'volume'}, inplace=True)
+            ref_price = trading_data_df.iloc[-1]['close']
             ## set data range by date
             indexDates = trading_data_df[trading_data_df.index < start_tm].index
             # Delete these row indexes from dataFrame
@@ -248,7 +254,7 @@ def start_scan(ticker_list, start_date, end_date):
 
         cerebro.addstrategy(div_ema_scan_strategy,
                             cerebro_ticker_list, dataId_to_ticker_dic, ticker_to_dataId_dic,
-                            start_date, end_date)
+                            start_date, end_date, ref_price)
                             #end_date.strftime("%Y-%m-%d"))
         #cerebro.addindicator(SchaffTrend)
         #print('Starting Scanning')
@@ -273,8 +279,8 @@ def start_scan(ticker_list, start_date, end_date):
     return mk_df
 
     
-def runstrat(sector_name):
-    today = datetime.datetime.today().date()
+def runstrat(sector_name, today):
+    #today = datetime.datetime.today().date()
     shift = datetime.timedelta(max(1,(today.weekday() + 6) % 7 - 3))
     end_date = today - shift + datetime.timedelta(days=1)
     #start_date = datetime.datetime(2015, 1,1)
@@ -348,13 +354,24 @@ def parse_args(pargs=None):
                         help='russell sectors')
     parser.add_argument('--industry', '-i', required=False, default='all',
                         help='russell industry')
+    parser.add_argument('--date', '-d', required=False, default='none',
+                        help='target date')
 
 
     return parser.parse_args(pargs)
- 
+
+def mkdate(datestr):
+    return time.strptime(datestr, '%Y-%m-%d')
+
+
 if __name__ == '__main__':
     args = parse_args()
-    runstrat(args.sector)
+    if args.date != 'none':
+        today = datetime.datetime.strptime(args.date, '%Y-%m-%d')
+        today = today.date()
+    else:
+        today = datetime.datetime.today().date()
+    runstrat(args.sector, today)
 
     """
     print(args.sector, args.industry)

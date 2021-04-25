@@ -22,7 +22,7 @@ def run_stat(target_csv, target_strat=0):
     #mk_df = pd.DataFrame(columns = ["sym", "date", "close", "high", "perc", "exit","edate","eperc"])
     #mk_df= pd.read_csv(filename) #, index_col=0, parse_dates=True)
     mk_df= pd.read_csv(filename, index_col=[0]) #, index_col=0, parse_dates=True)
-    mk_df.drop(mk_df[mk_df.strategy == target_strat].index, inplace=True)
+    mk_df.drop(mk_df[mk_df.strategy != target_strat].index, inplace=True)
     #view #1: use hist only
     #mk_df.hist(column=['perc','eperc'])
 
@@ -46,7 +46,7 @@ def parse_args(pargs=None):
     parser.add_argument('--target', '-t', required=False, default='etf',
                         help='etf/ark/russell/sp500')
     parser.add_argument('--strategy', '-s', required=False, default='0',
-                        help='1/2')
+                        help='10/11/20/21')
 
     parser.add_argument('--plot', '-p', required=False, default='yes',
                         help='plot or not')

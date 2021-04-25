@@ -32,7 +32,7 @@ arklinks = ["https://ark-funds.com/wp-content/fundsiteliterature/csv/ARK_INNOVAT
            ]
 
 # dataframe column 
-conf_mk_view_col = ["sym", "chg5", "chg10", "csU0", "cs", "cs-1", "sm", "ml","ema20","ema20-2","ema60"]
+conf_mk_view_col = ["sym", "chg5", "chg10", "csU0", "cs", "cs-1", "sm", "ml","ema20","ema20-2","ema60","date", "close","ref"]
 conf_ticker_idx =   0
 conf_chg5_idx =     1
 conf_chg10_idx =    2
@@ -44,4 +44,7 @@ conf_ml_idx =       7
 conf_ema20_idx =    8
 conf_ema20Chg_idx = 9
 conf_ema60_idx =    10
+conf_date_idx =     11
+conf_close_idx =    12
+conf_ref_idx =      13
 
