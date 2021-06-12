@@ -19,6 +19,7 @@ from inst_ind import *
         
 mk_view_list = []
 g_newlow_list = []
+g_ema_count = 0
 
 # write strategy
 class div_ema_scan_strategy(bt.Strategy):
@@ -64,7 +65,20 @@ class div_ema_scan_strategy(bt.Strategy):
     def stop(self):
         stock = self.pool_list[0]
         data = self.getdatabyname(stock)
+        global g_ema_count
         global mk_view_list
+        """
+        emaDown = 0
+        for x in range(15):
+            if data.ema20[-x] < data.ema20[-x-1]:
+                emaDown += 10
+        for x in range(3):
+            if data.ema20[-x] > data.ema20[-x-1]:
+                emaDown += 1
+        """
+        for x in range(3):
+            if (data.ema20[-x] > data.ema20[-x-1]) and (data.ema20[-x-2] > data.ema20[-x-1]):
+                g_ema_count += 1
         mk_view_list[conf_chg5_idx] = round(100 * (data.close[0] - data.close[-5]) / (data.close[-5] + 0.01),2)
         mk_view_list[conf_chg10_idx] = round(100 * (data.close[0] - data.close[-10]) / (data.close[-10] + 0.01),2)
         mk_view_list[conf_cs0Cnt_idx] = self.csCount
@@ -73,7 +87,7 @@ class div_ema_scan_strategy(bt.Strategy):
         mk_view_list[conf_sm_idx] = round(data.priceDiv.sm[0],2)
         mk_view_list[conf_ml_idx] = round(data.priceDiv.ml[0],2)
         mk_view_list[conf_ema20_idx] = round(data.ema20[0],2)
-        mk_view_list[conf_ema20Chg_idx] = round(data.ema20[0] - data.ema20[-2],2)
+        mk_view_list[conf_ema20Chg_idx] = round(data.ema20[0] - data.ema20[-1],2)
         mk_view_list[conf_ema60_idx] = round(data.ema60[0],2)
         mk_view_list[conf_date_idx] = str(self.end_date)
         mk_view_list[conf_close_idx] = round(data.close[0],2)
@@ -246,6 +260,8 @@ def start_scan(ticker_list, start_date, end_date):
             print('new stock ' + tk)
             continue
         
+        global g_ema_count
+        g_ema_count += 1000
         cerebro.broker = bt.brokers.BackBroker(shortcash=True)  # 0.5%
         #cerebro.broker.set_slippage_fixed(1, slip_open=True)
         
@@ -274,12 +290,11 @@ def start_scan(ticker_list, start_date, end_date):
     #end of for loop
     print(mk_df)
     print("===================")
-    print(g_newlow_list)
-    print ("++++++++++  ")
     return mk_df
 
     
 def runstrat(sector_name, today):
+    global g_ema_count
     #today = datetime.datetime.today().date()
     shift = datetime.timedelta(max(1,(today.weekday() + 6) % 7 - 3))
     end_date = today - shift + datetime.timedelta(days=1)
@@ -302,8 +317,10 @@ def runstrat(sector_name, today):
         #ticker_list = ['TECL','FNGU','FNGO','CWEB','TQQQ','ARKW','ARKG','ARKK','QLD' ,'ROM']
         #ticker_list = ['TECL', 'FNGU','ARKK']
         #print(ticker_list)
-        g_newlow_list.append(["===ETF",str(end_date)])
+        g_ema_count = 0
         mk_df = start_scan(ticker_list, start_date, end_date)
+        g_newlow_list.append(["<==ETF",str(g_ema_count) + "|"+str(end_date)])
+        print(g_newlow_list)
         filename = conf_data_path + 'div_etf.csv'
         mk_df.to_csv(filename, encoding='utf8')
 
@@ -318,8 +335,10 @@ def runstrat(sector_name, today):
             date_str = datetime.datetime.strftime(datetime.datetime.now(), DATETIME_FORMAT)
 
         ticker_list = get_all_ark_symbol(date_str)
-        g_newlow_list.append(["===ARK",str(end_date)])
+        g_ema_count = 0
         mk_df = start_scan(ticker_list, start_date, end_date)
+        g_newlow_list.append(["<==ARK",str(g_ema_count) + "|"+str(end_date)])
+        print(g_newlow_list)
         # diff column is latest day position change
         mk_df = add_ark_diff(mk_df, date_str)
 
@@ -334,8 +353,10 @@ def runstrat(sector_name, today):
         ticker_list = get_growth_russell_symbols()
     else:
         ticker_list = get_russell_symbols_by_sector(sector_name)
-    g_newlow_list.append(["===RUS",str(end_date)])
+    g_ema_count = 0
     mk_df = start_scan(ticker_list, start_date, end_date)
+    g_newlow_list.append(["<==RUS",str(g_ema_count) + "|"+str(end_date)])
+    print(g_newlow_list)
     filename = conf_data_path + 'div_russell.csv'
     ## get ticker list and then add new sector column
     tlist = mk_df["sym"].tolist()
@@ -355,7 +376,7 @@ def parse_args(pargs=None):
     parser.add_argument('--industry', '-i', required=False, default='all',
                         help='russell industry')
     parser.add_argument('--date', '-d', required=False, default='none',
-                        help='target date')
+                        help='target date,2021-3-22')
 
 
     return parser.parse_args(pargs)

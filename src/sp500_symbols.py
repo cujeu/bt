@@ -456,7 +456,12 @@ def refine_russell_data():
     df_data.drop(indexNames , inplace=True)
     # "Symbol	Name	Industry	52W %Chg	Market Cap	Sales(a)	Net Income(a)	Sector	5Y Rev%	ROE%	Debt/Equity	Price/Cash Flow"
     #df[1] = df[1].apply(add_one)
-    df_data['52W %Chg'] = df_data['52W %Chg'].apply(lambda x: x.strip('%'))
+
+    #df_data['52W %Chg'] = df_data['52W %Chg'].apply(lambda x: x.replace('NA','1.0%'))
+    #df_data['52W %Chg'] = df_data['52W %Chg'].apply(lambda x: x.strip('%'))
+    df_data['52W %Chg'] = df_data['52W %Chg'].astype(str)
+    df_data["52W %Chg"] = [x.replace('%',' ') for x in df_data["52W %Chg"]]
+
     df_data['5Y Rev%'] = df_data['5Y Rev%'].apply(lambda x: x.replace(',',''))
     df_data['5Y Rev%'] = df_data['5Y Rev%'].apply(lambda x: x.strip('%'))
     df_data['ROE%'] = df_data['ROE%'].apply(lambda x: x.strip('%'))

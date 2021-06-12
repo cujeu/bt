@@ -69,7 +69,7 @@ class atr_scrn_strategy(bt.Strategy):
             d.data_obv = OnBalanceVolume(d)
             d.data_obv20 = btind.SMA(d.data_obv, period=20)
             d.data_atr = AtrTrend(d)
-            #d.data_bb = btind.BollingerBands(d, period=14, devfactor=2.0)
+            #d.data_bb = btind.BollingerBands(d, period=20, devfactor=2.0)
             #d.data_kc = KeltnerChannel(d, periodEMA = 20, periodATR = 20, devfactor=1.5 )
             #d.data_rg = RGChannel(d)
 
@@ -436,7 +436,7 @@ def runstrat(sector_name, today):
     if sector_name == 'all':
         ticker_list = get_etf_symbols()
         #ticker_list = ['TECL','FNGU','FNGO','CWEB','TQQQ','ARKW','ARKG','ARKK','QLD' ,'ROM']
-        g_alert_list.append(["===ETF",str(end_date)])
+        g_alert_list.append(["ETF==>",str(end_date)])
         mk_df = start_scan(ticker_list, start_date, end_date)
         filename = conf_data_path + 'scan_etf.csv'
         mk_df.to_csv(filename, encoding='utf8')
@@ -454,7 +454,7 @@ def runstrat(sector_name, today):
             date_str = datetime.datetime.strftime(datetime.datetime.now(), DATETIME_FORMAT)
 
         ticker_list = get_all_ark_symbol(date_str)
-        g_alert_list.append(["===ARK",str(end_date)])
+        g_alert_list.append(["ARK==>",str(end_date)])
         mk_df = start_scan(ticker_list, start_date, end_date)
         filename = conf_data_path + 'scan_ark.csv'
         mk_df.to_csv(filename, encoding='utf8')
@@ -469,7 +469,7 @@ def runstrat(sector_name, today):
         ticker_list = get_growth_russell_symbols()
     else:
         ticker_list = get_russell_symbols_by_sector(sector_name)
-    g_alert_list.append(["===RUS",str(end_date)])
+    g_alert_list.append(["RUS==>",str(end_date)])
     mk_df = start_scan(ticker_list, start_date, end_date)
     ## get ticker list and then add new sector column
     tlist = mk_df["sym"].tolist()
