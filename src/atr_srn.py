@@ -125,11 +125,22 @@ class atr_scrn_strategy(bt.Strategy):
             #    data.priceDiv.cs[-1] > data.priceDiv.sm[-1]):
             
             # in normal process 10 --> 11 --> 20 --> 0
-            if (self.curStrategy == 10):
-                # ema20 turn and close over ema20
+            if (self.curStrategy >= 10) and (self.curStrategy <= 12):
+                lastStr = self.curStrategy
+                # ema20 turn up and close over ema20
                 if (data.close[0] > data.ema20[0]) and \
                    (data.ema20[0] > data.ema20[-1] and data.ema20[-2] > data.ema20[-1]):
                     self.curStrategy = 11
+
+                if (data.ema20[0] > data.ema20[-1] and data.ema20[-2] > data.ema20[-1]):
+                    for x in range(self.periodTD9):
+                        #self.log('test :' + str(self.current_date) + str(self.pastTD9[(self.bar_num - x) % self.periodTD9]))
+                        if self.pastTD9[(self.bar_num - x) % self.periodTD9] >= 9:
+                            self.curStrategy = 12   ## 12 is TD9 then ema up
+                            break
+                    #self.log('test :' + str(self.current_date) + str(self.curStrategy)+ ' ema20=' +str(data.ema20[0]) + ' ema20=' +str(data.ema20[-1]))
+
+                if (self.curStrategy != lastStr):
                     self.barDiv = 0
                     self.entryPrice = data.close[0]
                     self.highPrice = data.close[0]
@@ -145,14 +156,17 @@ class atr_scrn_strategy(bt.Strategy):
                     result_list[8] = str(self.curStrategy)
                     self.position_list.append(result_list)
                     result_list = []
+                    if (self.current_date + datetime.timedelta(days=3)) >= self.end_date:
+                        global g_alert_list
+                        g_alert_list.append([stock,str(self.curStrategy),str(self.current_date)])
 
-            if ((self.curStrategy == 10) or (self.curStrategy == 11)) and \
+            if ((self.curStrategy >= 10) and (self.curStrategy <= 12)) and \
                (data.priceDiv.cs[0] < 0 and data.priceDiv.cs[-1] > 0 and \
                 data.priceDiv.cs[0] < data.priceDiv.sm[0]) :
 
                 #transfer the strategy
                 if self.atrTrend:
-                    self.curStrategy = 21
+                    self.curStrategy = 20 + self.curStrategy - 10
                 else:
                     self.hasPosition = False
                     result_list = self.position_list[-1]
@@ -168,7 +182,7 @@ class atr_scrn_strategy(bt.Strategy):
                     self.curStrategy = 0
                     self.barDiv = 0
 
-            elif (self.curStrategy >= 20) and (not self.atrTrend):
+            elif self.curStrategy >= 20 and (not self.atrTrend):
                 self.hasPosition = False
                 result_list = self.position_list[-1]
                 del self.position_list[-1]
@@ -205,6 +219,7 @@ class atr_scrn_strategy(bt.Strategy):
                 
             cond_atr = False
             cond_div = False
+            cond_TD9U = False
             if self.curStrategy == 0:
                 cond_atr = self.atrTrend
                 cond_div = ((data.priceDiv.cs[0] < -10 or
@@ -220,16 +235,28 @@ class atr_scrn_strategy(bt.Strategy):
                             cond_div = True
                             break
 
-            #if (cond_atr and (data.priceDiv.cs[0] > data.priceDiv.sm[0] and
-            #                 data.priceDiv.cs[0] < data.priceDiv.ml[0] and
-            #                 data.priceDiv.sm[0] > data.priceDiv.sm[-1])) or 
+                if (data.priceDiv.cs[0] < 0) and (data.ema20[0] > data.ema20[-1] and data.ema20[-2] > data.ema20[-1]):
+                    for x in range(self.periodTD9):
+                        if self.pastTD9[(self.bar_num - x) % self.periodTD9] >= 9:
+                            self.curStrategy = 30   ## 30 is TD9 then ema up
+                            cond_TD9U = True
+                            cond_atr = False
+                            cond_div = False
+                            break
 
-                if cond_atr or cond_div :
+                #if (cond_atr and (data.priceDiv.cs[0] > data.priceDiv.sm[0] and
+                #                 data.priceDiv.cs[0] < data.priceDiv.ml[0] and
+                #                 data.priceDiv.sm[0] > data.priceDiv.sm[-1])) or 
+
+                if cond_atr or cond_div or cond_TD9U:
                     if cond_div:
                         self.curStrategy = 10
                         self.barDiv = self.bar_num
+                    elif cond_TD9U:
+                        self.curStrategy = 30
                     else:
                         self.curStrategy = 20
+
                     self.hasPosition = True
                     self.entryPrice = data.close[0]
                     self.highPrice = data.close[0]
@@ -436,11 +463,11 @@ def runstrat(sector_name, today):
     if sector_name == 'all':
         ticker_list = get_etf_symbols()
         #ticker_list = ['TECL','FNGU','FNGO','CWEB','TQQQ','ARKW','ARKG','ARKK','QLD' ,'ROM']
+        #ticker_list = ['ARKK','ARKF','TECL']
         g_alert_list.append(["ETF==>",str(end_date)])
         mk_df = start_scan(ticker_list, start_date, end_date)
         filename = conf_data_path + 'scan_etf.csv'
         mk_df.to_csv(filename, encoding='utf8')
-
 
         ## 2.scan ARK
         #ticker_list = get_ark_symbols()
@@ -477,6 +504,7 @@ def runstrat(sector_name, today):
     mk_df['sector'] = slist
     filename = conf_data_path + 'scan_russell.csv'
     mk_df.to_csv(filename, encoding='utf8')
+
     print("scan done")
 
     """
