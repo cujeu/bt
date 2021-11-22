@@ -234,11 +234,11 @@ def get_etf_symbols():
     etf_list =[ 'ARKK','ARKG','ARKQ','ARKF','ARKW',
                 'TECL','FNGU','SOXX','QLD' ,'ROM',
                 'ONLN','QCLN','IBUY','FDNI','PBW',
-                'ESPO','CWEB','TQQQ','UBOT','OGIG',
-                'ACES','TAN' ,'EMQQ','CNRG','SMOG',
+                'ESPO','FDN' ,'TQQQ','UBOT','OGIG',
+                'SOCL','IGV' ,'EMQQ','CNRG','SMOG',
                 'LIT', 'SKYY','BOTZ','HAIL','XLY',
                 'XLU', 'XLV', 'XLF', 'XLE', 'XLRE',
-                'XLB', 'XLC', 'XLI', 'XLP', 'XTL']
+                'XLB', 'XLK', 'XLI', 'XLP', 'XTL']
     etf_list.sort()
     return etf_list
 
@@ -263,7 +263,7 @@ def get_info_by_sym(ticker_name):
     #drop the unnessary 2 lines in tail
     #df_data.drop(df_data.tail(2).index, inplace=True)
     # column names
-    #Symbol,Name,Industry,"52W %Chg","Market Cap",Sales(a),"Net Income(a)",Sector,"5Y Rev%",ROE%,Debt/Equity,"Price/Cash Flow"
+    #Symbol,Name,Industry,"52W %Chg","Market Cap",Sales(a),"Net Income(a)",Sector,"5Y Rev%",ROE%,Debt/Equity,"Price/Cash Flow","P/E ttm"
     tlist = []
     for index, row in df_data.iterrows():
         s = row['Symbol']
@@ -276,6 +276,7 @@ def get_info_by_sym(ticker_name):
             tlist.append(row['ROE%'])
             tlist.append(row['Debt/Equity'])
             tlist.append(row['Price/Cash Flow'])
+            tlist.append(row['P/E ttm'])
             break;
     return tlist
 
@@ -285,12 +286,14 @@ def get_sec_by_symlist(ticker_list):
     #drop the unnessary 2 lines in tail
     #df_data.drop(df_data.tail(2).index, inplace=True)
     slist = []
+    df_data['Sector'] = df_data['Sector'].astype(str)
+    df_data['Industry'] = df_data['Industry'].astype(str)
     for t in ticker_list:
         slist.append("NA")
         for index, row in df_data.iterrows():
             s = row['Symbol']
             if s == t:
-                info = row['Sector'] + '/' + row['Industry']
+                info = row['Sector'] + '-' + row['Industry']
                 slist[-1] = info
                 break
     return slist
@@ -366,6 +369,15 @@ def get_russell_symbols_by_sector(sector_name):
             if s.find('.') < 0 and s.find(' ') < 0:
                 tlist.append(s)
 
+    return tlist
+
+def get_spec_russell_symbols():
+    
+    #upper bound cap 18B , lower bound 2B
+    tlist = []
+    with open(conf_data_path + 'spec') as f:
+        lines = f.read().splitlines()
+    tlist = [x.upper() for x in lines]
     return tlist
 
 # list stock symbols by industry
@@ -454,11 +466,12 @@ def refine_russell_data():
     df_data.drop(indexNames , inplace=True)
     indexNames = df_data[ df_data['Symbol'].str.contains("\.")].index
     df_data.drop(indexNames , inplace=True)
-    # "Symbol	Name	Industry	52W %Chg	Market Cap	Sales(a)	Net Income(a)	Sector	5Y Rev%	ROE%	Debt/Equity	Price/Cash Flow"
+    # "Symbol	Name	Industry	52W %Chg	Market Cap	Sales(a)	Net Income(a)	Sector	5Y Rev%	ROE%	Debt/Equity	Price/Cash Flow  P/E ttm"
     #df[1] = df[1].apply(add_one)
 
     #df_data['52W %Chg'] = df_data['52W %Chg'].apply(lambda x: x.replace('NA','1.0%'))
     #df_data['52W %Chg'] = df_data['52W %Chg'].apply(lambda x: x.strip('%'))
+    df_data["52W %Chg"] = df_data["52W %Chg"].fillna(0)
     df_data['52W %Chg'] = df_data['52W %Chg'].astype(str)
     df_data["52W %Chg"] = [x.replace('%',' ') for x in df_data["52W %Chg"]]
 
@@ -473,9 +486,62 @@ def refine_russell_data():
     
     return
 
+def sort_russell_by_ind():
+    df_data = read_russell_csv_df()
+    
+    tlist = df_data["Industry"].explode().unique().tolist()
+    for ind_name in tlist:
+        sort_russell_data(False, ind_name)
+
+def sort_russell_data(isSector, sec_name):
+    if isSector == True:
+        indexName = 'Sector'
+    else:
+        indexName = 'Industry'
+    df_data = read_russell_csv_df()
+
+    indexNames = df_data[ df_data[indexName] != sec_name ].index
+    df_data.drop(indexNames , inplace=True)
+
+    # "Symbol	Name	Industry	52W %Chg	Market Cap	Sales(a)	Net Income(a)	Sector	5Y Rev%	ROE%	Debt/Equity	Price/Cash Flow  P/E ttm"
+    # drop unnecessary columns
+    df_data.drop('Name', axis=1, inplace=True)
+    #df_data.drop('Industry', axis=1, inplace=True)
+    df_data.drop('52W %Chg', axis=1, inplace=True)
+    
+    # 1. daily trading value over 50M
+    # 2. income and market cap on top 5
+    # 3. high PE 
+    #df[1] = df[1].apply(add_one)
+
+    # sort by market cap and keep first 10
+    #rows = len(df_data) % 11
+    if len(df_data) > 20:
+        rows = len(df_data) - 10
+    else:
+        rows = len(df_data) // 2
+
+    # cut bottom market cap
+    df_data.sort_values(by=['Market Cap'], inplace=True, ascending=False)
+    df_data = df_data.iloc[rows:]
+
+    #print(len(df_data), rows )
+
+    # sort PE in ascending order
+    #df_data.sort_values(by=['P/E ttm'], inplace=True)
+    # sort PE in descending order and remove half rows
+    df_data.sort_values(by=['P/E ttm'], inplace=True, ascending=False)
+    # df.drop(df[df.score < 50].index, inplace=True)
+    # print(df_data.to_string())
+    pd.set_option("display.max_rows", None, "display.max_columns", None)
+    print(df_data.to_string())
+
+    return
+
 if __name__ == "__main__":
 
-    print(get_strong_russell_symbols())
+    print(get_spec_russell_symbols())
+    #print(get_strong_russell_symbols())
     #print(get_russell_sectors())
     #print(get_russell_industry_sector('Medical'))
 

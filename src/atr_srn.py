@@ -459,6 +459,7 @@ def runstrat(sector_name, today):
     start_date = end_date - datetime.timedelta(days=4*365)
     # ticker_list[0] must cover start_date to end_date, as a reference
 
+    #default sector_name = all
     ## 1. scan ETF
     if sector_name == 'all':
         ticker_list = get_etf_symbols()
@@ -469,6 +470,7 @@ def runstrat(sector_name, today):
         filename = conf_data_path + 'scan_etf.csv'
         mk_df.to_csv(filename, encoding='utf8')
 
+        """ wait ARK csv->excel now
         ## 2.scan ARK
         #ticker_list = get_ark_symbols()
         DATETIME_FORMAT = '%y%m%d'
@@ -488,12 +490,19 @@ def runstrat(sector_name, today):
         #with open(filename, 'a') as f:
         #    mk_df.to_csv(f, header=False)
         #    f.close
+        """
 
     ## 3. scan russell
+    #hard code for growth ,
+    if sector_name == 'all':
+        sector_name = 'grow'
     if sector_name == 'all':
         ticker_list = get_strong_russell_symbols()
     elif sector_name == 'grow':
         ticker_list = get_growth_russell_symbols()
+    elif sector_name == 'spec':
+        #watch and find something in russell
+        ticker_list = get_spec_russell_symbols()
     else:
         ticker_list = get_russell_symbols_by_sector(sector_name)
     g_alert_list.append(["RUS==>",str(end_date)])
@@ -504,6 +513,14 @@ def runstrat(sector_name, today):
     mk_df['sector'] = slist
     filename = conf_data_path + 'scan_russell.csv'
     mk_df.to_csv(filename, encoding='utf8')
+
+    # Open a file with access mode 'a' to append results
+    log_file = open('daily.txt', 'a')
+    for listitem in g_alert_list:
+        log_file.write('%s\n' % listitem)
+    #now_date = datetime.datetime.now()
+    log_file.write('===== end of day =====\n')
+    log_file.close()
 
     print("scan done")
 

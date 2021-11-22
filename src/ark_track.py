@@ -98,6 +98,9 @@ def output_changes(date_dir):
         marketcap_df_diff = marketcap_df.diff().to_dict()
         for ticker in shares_df_diff:
             lbuf = list(shares_df_diff[ticker].values())
+            if len(ticker)>4:  #slgcw cause 0 in marketcap_df
+                continue
+
             for i in range(0, len(lbuf)):
                 if lbuf[i] != 0 and not math.isnan(lbuf[i]):
                     marketcap_diff = list(marketcap_df_diff[ticker].values())[i]
@@ -109,6 +112,7 @@ def output_changes(date_dir):
                         etf_df = pd.DataFrame()
     
                     # find changes of market cap 
+                    # print(ticker)  #debug info
                     data = {'date': [list(shares_df_diff[ticker].keys())[i]], 
                             'ticker': [ticker],
                             'diff': [lbuf[i]],

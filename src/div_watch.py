@@ -301,6 +301,7 @@ def runstrat(sector_name, today):
     #start_date = datetime.datetime(2015, 1,1)
     start_date = end_date - datetime.timedelta(days=5*365)-datetime.timedelta(days=1)
 
+    #default sector_name = all
     if sector_name == 'all':
         """
         #1. watch sp500
@@ -324,6 +325,7 @@ def runstrat(sector_name, today):
         filename = conf_data_path + 'div_etf.csv'
         mk_df.to_csv(filename, encoding='utf8')
 
+        """  ARK use excel format now
         #3. watch ARK
         DATETIME_FORMAT = '%y%m%d'
         csv_dir = os.path.join(conf_data_path ,'csv')
@@ -344,19 +346,28 @@ def runstrat(sector_name, today):
 
         filename = conf_data_path + 'div_ark.csv'
         mk_df.to_csv(filename, encoding='utf8')
+        """
 
     #4. watch russell
+    #hard code for growth ,
+    if sector_name == 'all':
+        sector_name = 'grow'
     if sector_name == 'all':
         ticker_list = get_strong_russell_symbols()
     elif sector_name == 'grow':
         #watch growth russell
         ticker_list = get_growth_russell_symbols()
+    elif sector_name == 'spec':
+        #watch and find something in russell
+        ticker_list = get_spec_russell_symbols()
     else:
         ticker_list = get_russell_symbols_by_sector(sector_name)
+
     g_ema_count = 0
     mk_df = start_scan(ticker_list, start_date, end_date)
     g_newlow_list.append(["<==RUS",str(g_ema_count) + "|"+str(end_date)])
     print(g_newlow_list)
+
     filename = conf_data_path + 'div_russell.csv'
     ## get ticker list and then add new sector column
     tlist = mk_df["sym"].tolist()
@@ -364,6 +375,15 @@ def runstrat(sector_name, today):
     mk_df['sector'] = slist
     mk_df.to_csv(filename, encoding='utf8')
     # ticker_list[0] must cover start_date to end_date, as a reference
+
+    # Open a file with access mode 'a' to append results
+    log_file = open('daily.txt', 'a')
+    now_date = datetime.datetime.now().strftime("%m/%d/%Y")
+    log_file.write('\n=====  start of %s ===== total|ema-up \n' %now_date)
+    for listitem in g_newlow_list:
+        log_file.write('%s\n' % listitem)
+    log_file.close()
+
     print("scan done")
 
  
