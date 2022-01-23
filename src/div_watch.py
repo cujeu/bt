@@ -148,7 +148,12 @@ class div_ema_scan_strategy(bt.Strategy):
         if self.bar_num < self.p.look_back_days :
             return
 
+        #data abitration: len(data.close)==bar_num, 
+        # means if current day is 100th day, data.close[0] point to 100th day close
         data = self.getdatabyname(self.pool_list[0])        
+        #print(self.current_date,self.bar_num,len(data.close))
+        
+
         if data.priceDiv.cs[0] >= 0:
             if (self.csCount > 1):
                 self.csCount -= 2
@@ -206,6 +211,11 @@ def start_scan(ticker_list, start_date, end_date):
     profit_value = 1.0;
     init_cash = 100000.0
     start_tm = datetime.datetime(year=start_date.year, month=start_date.month, day=start_date.day,)
+    
+    back_gap = abs((end_date - datetime.datetime.today().date()).days)
+    back_gap = ((back_gap+6 ) // 7) * 5
+
+
     #mk_df = pd.DataFrame([["a",1, 2, 3]], columns = ["sym", "cs", "sm", "ml"])
     mk_df = pd.DataFrame(columns = conf_mk_view_col)
     for ticker in ticker_list:
@@ -220,6 +230,8 @@ def start_scan(ticker_list, start_date, end_date):
         cerebro_ticker_list.append(ticker)
         ref_price = 0
         len_enough = True
+
+        ##prepare data
         for tk in cerebro_ticker_list:
             filename = conf_backtest_data_path + tk + '.csv'
             if not os.path.exists(filename):
@@ -235,6 +247,8 @@ def start_scan(ticker_list, start_date, end_date):
             trading_data_df.rename(columns={'Open' : 'open', 'High' : 'high', 'Low' : 'low',
                                             'Close' : 'close', 'Volume' : 'volume'}, inplace=True)
             ref_price = trading_data_df.iloc[-1]['close']
+            for xbar in range(2,back_gap-1):
+                ref_price  = max(ref_price, trading_data_df.iloc[0-xbar]['close'])
             ## set data range by date
             indexDates = trading_data_df[trading_data_df.index < start_tm].index
             # Delete these row indexes from dataFrame
@@ -293,11 +307,11 @@ def start_scan(ticker_list, start_date, end_date):
     return mk_df
 
     
-def runstrat(sector_name, today):
+def runstrat(sector_name, bar_day):
     global g_ema_count
     #today = datetime.datetime.today().date()
-    shift = datetime.timedelta(max(1,(today.weekday() + 6) % 7 - 3))
-    end_date = today - shift + datetime.timedelta(days=1)
+    shift = datetime.timedelta(max(1,(bar_day.weekday() + 6) % 7 - 3))
+    end_date = bar_day - shift + datetime.timedelta(days=1)
     #start_date = datetime.datetime(2015, 1,1)
     start_date = end_date - datetime.timedelta(days=5*365)-datetime.timedelta(days=1)
 
@@ -407,12 +421,13 @@ def mkdate(datestr):
 
 if __name__ == '__main__':
     args = parse_args()
+    today = datetime.datetime.today().date()
     if args.date != 'none':
-        today = datetime.datetime.strptime(args.date, '%Y-%m-%d')
-        today = today.date()
+        bar_day = datetime.datetime.strptime(args.date, '%Y-%m-%d')
+        bar_day = bar_day.date()
     else:
-        today = datetime.datetime.today().date()
-    runstrat(args.sector, today)
+        bar_day = datetime.datetime.today().date()
+    runstrat(args.sector, bar_day)
 
     """
     print(args.sector, args.industry)
