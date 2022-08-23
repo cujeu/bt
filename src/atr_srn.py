@@ -130,7 +130,7 @@ class atr_scrn_strategy(bt.Strategy):
                 # ema20 turn up and close over ema20
                 if (data.close[0] > data.ema20[0]) and \
                    (data.ema20[0] > data.ema20[-1] and data.ema20[-2] > data.ema20[-1]):
-                    self.curStrategy = 11
+                    self.curStrategy = 11   ## 11 is ema20 turn up
 
                 if (data.ema20[0] > data.ema20[-1] and data.ema20[-2] > data.ema20[-1]):
                     for x in range(self.periodTD9):

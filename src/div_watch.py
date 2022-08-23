@@ -307,7 +307,7 @@ def start_scan(ticker_list, start_date, end_date):
     return mk_df
 
     
-def runstrat(sector_name, bar_day):
+def runstrat(sector_name, bar_day, etf_name=None):
     global g_ema_count
     #today = datetime.datetime.today().date()
     shift = datetime.timedelta(max(1,(bar_day.weekday() + 6) % 7 - 3))
@@ -371,6 +371,13 @@ def runstrat(sector_name, bar_day):
     elif sector_name == 'grow':
         #watch growth russell
         ticker_list = get_growth_russell_symbols()
+    elif sector_name == 'etf':
+        #watch etf
+        ticker_list = get_zacks_etf_holding(etf_name)
+        #only watch 20 tickers
+        if len(ticker_list) > 20:
+            ticker_list = ticker_list[0:20]
+
     elif sector_name == 'spec':
         #watch and find something in russell
         ticker_list = get_spec_russell_symbols()
@@ -407,6 +414,8 @@ def parse_args(pargs=None):
     # Defaults for dates
     parser.add_argument('--sector', '-s', required=False, default='all',
                         help='russell sectors')
+    parser.add_argument('--etf', '-e', required=False, default='none',
+                        help='russell etf')
     parser.add_argument('--industry', '-i', required=False, default='all',
                         help='russell industry')
     parser.add_argument('--date', '-d', required=False, default='none',
@@ -427,7 +436,11 @@ if __name__ == '__main__':
         bar_day = bar_day.date()
     else:
         bar_day = datetime.datetime.today().date()
-    runstrat(args.sector, bar_day)
+
+    if args.etf !='none':
+        runstrat('etf', bar_day, args.etf)
+    else:
+        runstrat(args.sector, bar_day)
 
     """
     print(args.sector, args.industry)

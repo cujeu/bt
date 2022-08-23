@@ -9,6 +9,7 @@
 #import pickle
 import os
 import datetime
+import re
 import bs4 as bs
 import requests
 import pandas as pd
@@ -242,6 +243,44 @@ def get_etf_symbols():
     etf_list.sort()
     return etf_list
 
+def get_zacks_etf_holding(etf_name=None):
+    etf_keys = ['XLB','XLC','XLF','XLE','XLK','XLI','XLP','XLRE','XLU','XLV','XTL','XLY','TECL','FNGU','TQQQ','CNRG']
+    etf_url="https://www.zacks.com/funds/etf/{}/holding"
+    headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:83.0) Gecko/20100101 Firefox/83.0"}
+    etf_stock_list = []
+
+    if etf_name is not None:
+        etf_keys = []
+        etf_keys.append(etf_name)
+
+    with requests.Session() as req:
+        req.headers.update(headers)
+
+        for key in etf_keys:
+            r = req.get(etf_url.format(key))
+            print(key+"=======")
+            etf_stock_list = re.findall(r'etf\\\/(.*?)\\', r.text)
+            print(etf_stock_list)
+            #etf_stock_details_list = re.findall(r'<\\\/span><\\\/span><\\\/a>",(.*?), "<a class=\\\"report_document newwin\\', r.text)
+            #print(etf_stock_details_list)
+    return etf_stock_list
+    
+def get_mutual_holding():
+    mutual_keys = ['VFTAX','VFIAX']
+    mutual_url="https://www.zacks.com/funds/mutual-fund/quote/{}/holding"
+    headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:83.0) Gecko/20100101 Firefox/83.0"}
+
+    with requests.Session() as req:
+        req.headers.update(headers)
+        for key in mutual_keys:
+            r = req.get(mutual_url.format(key))
+            print(key)
+            mutual_stock_list = re.findall(r'\\\/mutual-fund\\\/quote\\\/(.*?)\\', r.text)
+            print(mutual_stock_list)    
+            #mutual_stock_details_list = re.findall(r'"sr-only\\\"><\\\/span><\\\/span><\\\/a>",(.*?)%", "', r.text)
+            #print(mutual_stock_details_list)
+    return
+    
 def get_all_symbols():
     df_data = read_csv_df()
     #column name:ticker,instrument,name,sector,currency,created_date
@@ -263,7 +302,7 @@ def get_info_by_sym(ticker_name):
     #drop the unnessary 2 lines in tail
     #df_data.drop(df_data.tail(2).index, inplace=True)
     # column names
-    #Symbol,Name,Industry,"52W %Chg","Market Cap",Sales(a),"Net Income(a)",Sector,"5Y Rev%",ROE%,Debt/Equity,"Price/Cash Flow","P/E ttm"
+    #Symbol,Name,Industry,"52W %Chg","Market Cap",Sales(a),"Net Income(a)",Sector,"5Y Rev%",ROE%,Debt/Equity,"Price/Cash Flow","P/E ttm","Earnings ttm","PEG"
     tlist = []
     for index, row in df_data.iterrows():
         s = row['Symbol']
@@ -277,6 +316,8 @@ def get_info_by_sym(ticker_name):
             tlist.append(row['Debt/Equity'])
             tlist.append(row['Price/Cash Flow'])
             tlist.append(row['P/E ttm'])
+            tlist.append(row['Earnings ttm'])
+            tlist.append(row['PEG'])
             break;
     return tlist
 
@@ -466,7 +507,7 @@ def refine_russell_data():
     df_data.drop(indexNames , inplace=True)
     indexNames = df_data[ df_data['Symbol'].str.contains("\.")].index
     df_data.drop(indexNames , inplace=True)
-    # "Symbol	Name	Industry	52W %Chg	Market Cap	Sales(a)	Net Income(a)	Sector	5Y Rev%	ROE%	Debt/Equity	Price/Cash Flow  P/E ttm"
+    # "Symbol	Name	Industry	52W %Chg	Market Cap	Sales(a)	Net Income(a)	Sector	5Y Rev%	ROE%	Debt/Equity	Price/Cash Flow  P/E ttm  Earnings ttm PEG"
     #df[1] = df[1].apply(add_one)
 
     #df_data['52W %Chg'] = df_data['52W %Chg'].apply(lambda x: x.replace('NA','1.0%'))
@@ -477,6 +518,7 @@ def refine_russell_data():
 
     df_data['5Y Rev%'] = df_data['5Y Rev%'].apply(lambda x: x.replace(',',''))
     df_data['5Y Rev%'] = df_data['5Y Rev%'].apply(lambda x: x.strip('%'))
+    df_data['ROE%'] = df_data['ROE%'].apply(lambda x: x.replace(',',''))
     df_data['ROE%'] = df_data['ROE%'].apply(lambda x: x.strip('%'))
 
     df_data['Market Cap'] = df_data['Market Cap'].apply(lambda x: x/1000000)
@@ -503,7 +545,7 @@ def sort_russell_data(isSector, sec_name):
     indexNames = df_data[ df_data[indexName] != sec_name ].index
     df_data.drop(indexNames , inplace=True)
 
-    # "Symbol	Name	Industry	52W %Chg	Market Cap	Sales(a)	Net Income(a)	Sector	5Y Rev%	ROE%	Debt/Equity	Price/Cash Flow  P/E ttm"
+    # "Symbol	Name	Industry	52W %Chg	Market Cap	Sales(a)	Net Income(a)	Sector	5Y Rev%	ROE%	Debt/Equity	Price/Cash Flow  P/E ttm Earnings ttm PEG"
     # drop unnecessary columns
     df_data.drop('Name', axis=1, inplace=True)
     #df_data.drop('Industry', axis=1, inplace=True)
@@ -540,7 +582,10 @@ def sort_russell_data(isSector, sec_name):
 
 if __name__ == "__main__":
 
-    print(get_spec_russell_symbols())
+    get_zacks_etf_holding()
+    #get_mutual_holding()
+
+    #print(get_spec_russell_symbols())
     #print(get_strong_russell_symbols())
     #print(get_russell_sectors())
     #print(get_russell_industry_sector('Medical'))

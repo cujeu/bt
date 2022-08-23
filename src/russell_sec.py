@@ -16,6 +16,8 @@ def parse_args(pargs=None):
                         help='russell sectors')
     parser.add_argument('--industry', '-i', required=False, default='none',
                         help='russell industry')
+    parser.add_argument('--etf', '-e', required=False, default='none',
+                        help='ETF holdings')
     parser.add_argument('--ticker', '-t', required=False, default='none',
                         help='russell ticker')
     parser.add_argument('--list', '-l', required=False, default='none',
@@ -53,6 +55,12 @@ if __name__ == "__main__":
         else:
             sort_russell_data(False, sec_name)
 
+    elif args.etf != 'none':
+        etf_name = args.etf
+        etf_list = ['XLY','XLU', 'XLV', 'XLF', 'XLE', 'XLRE','XLB', 'XLK', 'XLI', 'XLP', 'XTL']
+        if etf_name in etf_list:
+            get_zacks_etf_holding(etf_name)
+
     elif args.industry == 'all':
         print("== all Industry ")
         sort_russell_by_ind()
@@ -66,7 +74,7 @@ if __name__ == "__main__":
     elif args.list != 'none':
         slist = args.list.split(',')
         print('Sector','Industry','Market Cap', 'Net Income(a)',
-              '5Y Rev%','ROE%','Debt/Equity','Price/Cash Flow','P/E ttm')
+              '5Y Rev%','ROE%','Debt/Equity','Price/Cash Flow','P/E ttm','Earnings ttm','PEG')
         for s in slist:
             print(s + ':' + str(get_info_by_sym(s.upper())))
     elif args.wash != 'none':
